@@ -48,7 +48,7 @@ Trains N independently initialized models on the chosen dataset/backbone. These 
 cd Source_Free_Class_Unlearning/
 
 # Example: 1 original ResNet-18 on CIFAR-10
-CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original.py \
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original \
   --model resnet18 \
   --dataset cifar10 \
   --run_original \
