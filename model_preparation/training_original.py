@@ -9,7 +9,7 @@ from torch.utils.data import Subset
 from models.allcnn import AllCNN
 from models.ViT import ViT_16_mod
 from models.swin_transformer import swin_tiny_patch4_window7_224
-from opts import OPT as opt
+from tools.opts import OPT as opt
 import os 
 import wandb
 
