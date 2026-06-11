@@ -192,7 +192,7 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 CUDA_VISIBLE_DEVICES=0 python training_original.py --model resnet18 --dataset cifar10 --run_original --n_model 1
 
 # Evaluate originals → CSV
-CUDA_VISIBLE_DEVICES=0 python test_originalmodel.py
+CUDA_VISIBLE_DEVICES=0 python test_originalmodel_singleclass.py
 
 # Train Oracle on CIFAR-100 (ViT)
 CUDA_VISIBLE_DEVICES=0 python training_oracle.py --model resnet18 --dataset cifar10 --mode CR --run_rt_model
