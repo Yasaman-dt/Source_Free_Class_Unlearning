@@ -8,9 +8,9 @@ import numpy as np
 from models.allcnn import AllCNN
 import csv
 from models.ViT import ViT_16_mod
-from opts import OPT as opt
+from tools.opts import OPT as opt
 import os 
-from dsets import get_dsets_remove_class, get_dsets
+from tools.dsets import get_dsets_remove_class, get_dsets
 from models.swin_transformer import swin_tiny_patch4_window7_224
 from torchvision.transforms import InterpolationMode
 import wandb
