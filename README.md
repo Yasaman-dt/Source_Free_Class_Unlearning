@@ -196,23 +196,23 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original --model res
 # Evaluate originals → CSV
 CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_singleclass
 
-# Train Oracle on CIFAR-100 (ViT)
+# Train Oracle on CIFAR-10
 CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle --model resnet18 --dataset cifar10 --mode CR --run_rt_model
 
 # Create embeddings
 CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
 
 # FC-only unlearning (real embeddings) with DELETE on ResNet-18
-./scripts/job_singleclass_real.sh DELETE 0.01 1 5000 0 100 resnet18
+./scripts/job_singleclass_real.sh cifar10 DELETE 0.01 1 5000 0 100 resnet18
 
-# FC-only unlearning (synthetic) with DELETE on ResNet-18 + Gaussian
-./scripts/job_singleclass_synth.sh DELETE 0.01 1 5000 0 200 resnet18 gaussian
+# FC-only unlearning (synthetic embeddings) with DELETE on ResNet-18 + Gaussian
+./scripts/job_singleclass_synth.sh cifar10 DELETE 0.01 1 5000 0 200 resnet18 gaussian
 
-# Partial-layer unlearning (synthetic) with DELETE on ResNet-18
-./scripts/job_singleclass_synth_part.sh DELETE 0.01 1 5000 0 200 resnet18
+# Partial-layer unlearning (synthetic embeddings) with DELETE on ResNet-18
+./scripts/job_singleclass_synth_part.sh cifar10 DELETE 0.01 1 5000 0 200 resnet18
 
-# Partial-layer unlearning (real) with DELETE on ResNet-18
-./scripts/job_singleclass_real_part.sh DELETE 0.01 1 5000 0 200 resnet18
+# Partial-layer unlearning (real embeddings) with DELETE on ResNet-18
+./scripts/job_singleclass_real_part.sh cifar10 DELETE 0.01 1 5000 0 200 resnet18
 ```
 
 ## Citation
