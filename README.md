@@ -193,16 +193,16 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 
 ```bash
 # Train original ResNet-18 models on CIFAR-10
-CUDA_VISIBLE_DEVICES=0 python training_original.py --model resnet18 --dataset cifar10 --run_original --n_model 1
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original --model resnet18 --dataset cifar10 --run_original --n_model 1
 
 # Evaluate originals → CSV
-CUDA_VISIBLE_DEVICES=0 python test_originalmodel_singleclass.py
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_singleclass
 
 # Train Oracle on CIFAR-100 (ViT)
-CUDA_VISIBLE_DEVICES=0 python training_oracle.py --model resnet18 --dataset cifar10 --mode CR --run_rt_model
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle --model resnet18 --dataset cifar10 --mode CR --run_rt_model
 
 # Create embeddings
-CUDA_VISIBLE_DEVICES=0 python create_embeddings.py
+CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
 
 # FC-only unlearning (real embeddings) with DELETE on ResNet-18
 ./scripts/job_real_cifar10.sh DELETE 0.01 1 5000 0 100 resnet18
