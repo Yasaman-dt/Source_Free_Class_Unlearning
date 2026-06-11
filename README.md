@@ -40,9 +40,9 @@ pip install -r requirements.txt
 
 ---
 
-## 1) Train “Original” (baseline) models
+## 1) Train “Original” models
 
-Trains N independently initialized models on the chosen dataset/backbone. These serve as your **baseline**.
+Trains N independently initialized models on the chosen dataset/backbone.
 
 ```bash
 cd Source_Free_Class_Unlearning/
@@ -61,17 +61,7 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original \
 
 ---
 
-## 2) Create dataset embeddings
-
-Computes/stores feature embeddings used by several unlearning settings 
-
-```bash
-CUDA_VISIBLE_DEVICES=0 python create_embeddings.py
-```
-
----
-
-## 3) Evaluate originals → CSV
+## 2) Evaluate originals → CSV
 
 Produces a CSV with baseline metrics for later comparison.
 
@@ -86,7 +76,7 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_multiclass
 
 ---
 
-## 4) Train Oracle (retrained-from-scratch)
+## 3) Train Oracle (retrained-from-scratch)
 
 The **Oracle** is the upper bound which is the retrained model from scratch with retainset.
 
@@ -110,6 +100,16 @@ CUDA_VISIBLE_DEVICES=2 python -m model_preparation.training_oracle.py \
   --bsize 256 \
   --forget_mode multi \
   --num_forget_classes 2
+```
+
+---
+
+## 4) Create dataset embeddings
+
+Computes/stores feature embeddings used by several unlearning settings 
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
 ```
 
 ---
