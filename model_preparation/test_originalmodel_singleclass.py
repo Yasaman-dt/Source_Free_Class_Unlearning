@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Subset
 from torch.utils.data import TensorDataset, DataLoader
 import copy
-from create_embeddings_utils import get_model
+from embedding_extraction.create_embeddings_utils import get_model
 import pandas as pd
 import os
 

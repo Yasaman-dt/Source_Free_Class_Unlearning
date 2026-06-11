@@ -4,7 +4,7 @@ import numpy as np
 import torch.nn as nn
 import pandas as pd
 import os
-from create_embeddings_utils import get_model
+from embedding_extraction.create_embeddings_utils import get_model
 
 DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
 weights_folder = "weights"
