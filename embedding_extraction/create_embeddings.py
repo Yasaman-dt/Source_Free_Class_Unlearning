@@ -3,7 +3,7 @@ import sys
 import torch
 from logging import basicConfig, getLogger
 import os
-from create_embeddings_utils import (
+from embedding_extraction.create_embeddings_utils import (
     DATASETS,
     MODELS,
     CustomBackboneModel,
@@ -13,7 +13,6 @@ from create_embeddings_utils import (
 )
 from tqdm.auto import tqdm
 
-#DIR = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning"
 DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
 
 folder = "embeddings"
