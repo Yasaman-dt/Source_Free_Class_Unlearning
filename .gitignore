@@ -2,7 +2,6 @@ __pycache__
 checkpoints_main
 checkpoints_main_real
 datasets
-data
 embeddings
 out_real
 out_synth_gaussian
