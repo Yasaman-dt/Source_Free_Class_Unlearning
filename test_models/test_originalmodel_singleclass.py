@@ -20,14 +20,14 @@ DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
 checkpoint_folder = "checkpoints"
 weights_folder = "weights"
 embeddings_folder = "embeddings"
-model_name = 'ViT'
+model_name = 'resnet18'
 
 # -------------------- Configuration --------------------
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # Parameters for generated samples
-#num_classes = 10
-#dataset_name = 'CIFAR10'  # This can be dynamically selected
+num_classes = 10
+dataset_name = 'CIFAR10'  # This can be dynamically selected
 
 #num_classes = 100
 #dataset_name = 'CIFAR100'  # This can be dynamically selected
@@ -44,12 +44,12 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # Configuration
 datasets = {
-    #"CIFAR10": 10,
-    "CIFAR100": 100,
+    "CIFAR10": 10,
+    #"CIFAR100": 100,
     #"TinyImageNet": 200,
 }
 
-n_models = range(2, 3)  # example range: 1 to 2 for demonstration
+n_models = range(1, 5)  # example range: 1 to 2 for demonstration
 results = []
 
 def evaluate_model(model, data_loader, device):
@@ -262,7 +262,7 @@ for dataset_name, num_classes in datasets.items():
                 "Test Acc": test_accuracy,
                 "Train Retain Acc": train_retain_acc,
                 "Train Forget Acc": train_fgt_acc,
-                "Val Test Retain Acc": val_test_retain_acsc,
+                "Val Test Retain Acc": val_test_retain_acc,
                 "Val Test Forget Acc": val_test_fgt_acc,
                 "Val Full Retain Acc": val_full_retain_acc,
                 "Val Full Forget Acc": val_full_fgt_acc,
