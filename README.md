@@ -219,8 +219,9 @@ CUDA_VISIBLE_DEVICES=0 python create_embeddings.py
 
 ## License
 
-If you find this work useful in your research, please consider citing our paper :)
+If you find this work useful or relevant to your research, please consider citing our paper.
 
+```bash
 @article{
 dehghani2026a,
 title={A Universal Source-Free Class Unlearning Framework via Synthetic Embeddings},
@@ -237,3 +238,4 @@ note={}
   author={Tafti, Zahra Dehghani and Piantanida, Pablo and Shateri, Mohammadhadi},
   journal={Transactions on Machine Learning Research}
 }
+```
