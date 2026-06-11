@@ -5,7 +5,8 @@ from utils import accuracy, set_seed, get_retrained_model, get_trained_model
 from MIA_code.MIA import get_MIA_SVC
 from opts import OPT as opt
 import time
-from Unlearning_methods_part import choose_method
+from methods.Unlearning_methods_part import choose_method
+from methods.Unlearning_methods_part import calculate_accuracy
 from error_propagation import Complex
 import os
 import torch
@@ -14,7 +15,6 @@ import numpy as np
 from generate_part_samples_randomly_resnet18 import generate_emb_samples_balanced
 from create_embeddings_utils import get_model
 from torch.utils.data import TensorDataset, DataLoader
-from Unlearning_methods_part import calculate_accuracy
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from torchvision.datasets import CIFAR10, CIFAR100
