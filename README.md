@@ -67,11 +67,11 @@ Produces a CSV with baseline metrics for later comparison.
 
 **single class unlearning:**
 ```bash
-CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_singleclass.py
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_singleclass
 ```
 **multi class unlearning:**
 ```bash
-CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_multiclass.py
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_multiclass
 ```
 
 ---
@@ -82,7 +82,7 @@ The **Oracle** is the upper bound which is the retrained model from scratch with
 
 **single class unlearning:**
 ```bash
-CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle.py \
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle \
   --model resnet18 \
   --dataset cifar10 \
   --mode CR \
@@ -91,7 +91,7 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle.py \
 
 **multi class unlearning:**
 ```bash
-CUDA_VISIBLE_DEVICES=2 python -m model_preparation.training_oracle.py \
+CUDA_VISIBLE_DEVICES=2 python -m model_preparation.training_oracle \
   --model resnet18 \
   --dataset cifar100 \
   --mode CR \
