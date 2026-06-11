@@ -73,11 +73,11 @@ Produces a CSV with baseline metrics for later comparison.
 
 **single class unlearning:**
 ```bash
-CUDA_VISIBLE_DEVICES=0 python test_originalmodel_singleclass.py
+CUDA_VISIBLE_DEVICES=0 python -m test_models.test_originalmodel_singleclass.py
 ```
 **multi classes unlearning:**
 ```bash
-CUDA_VISIBLE_DEVICES=0 python test_originalmodel_multiclass.py
+CUDA_VISIBLE_DEVICES=0 python -m test_models.test_originalmodel_multiclass.py
 ```
 
 ---
