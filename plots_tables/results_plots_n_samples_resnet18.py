@@ -53,7 +53,7 @@ plt.rc('legend', labelcolor='black')  # Ensures legend text is black
 parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/"
 
 # Load the data
-stats_path = os.path.join(parent_dir, "results_n_samples/results_unlearning_best_per_model_by_aus.csv")
+stats_path = os.path.join(parent_dir, "results_n_samples_resnet18/results_unlearning_best_per_model_by_aus.csv")
 df = pd.read_csv(stats_path)
 
 # Metrics as rows, methods as columns
@@ -128,8 +128,8 @@ def plot_with_black_box(plot_obj, filename):
             plt.gcf().add_artist(rect)
     
     # Save and show the plot
-    plt.savefig(f"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_n_samples/{filename}.png", dpi=600, bbox_inches='tight')
-    plt.savefig(f"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_n_samples/{filename}.pdf", dpi=600, bbox_inches='tight')
+    plt.savefig(f"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_n_samples_resnet18/{filename}.png", dpi=600, bbox_inches='tight')
+    plt.savefig(f"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_n_samples_resnet18/{filename}.pdf", dpi=600, bbox_inches='tight')
 
     plt.show()
 
@@ -214,7 +214,7 @@ for row in range(len(g.row_names)):
 
 # Save the plot before showing it
 plot_with_black_box(g, "plot_n_sample_resnet18")
-#plt.savefig(f"results_n_samples/plot_n_sample.png", dpi=600, bbox_inches='tight')
+#plt.savefig(f"results_n_samples_resnet18/plot_n_sample.png", dpi=600, bbox_inches='tight')
 
 
 
