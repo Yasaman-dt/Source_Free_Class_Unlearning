@@ -1,22 +1,21 @@
-DATASET="cifar100"
-METHOD=$1
-lr=$2
-N_MODEL=$3
-SAMPLE_PER_CLASS=$4
-gpu=$5
-epoch=$6
-MODEL=$7
-NOISE=$8
+DATASET=$1  #"cifar10", "cifar100", "TinyImageNet"
+METHOD=$2
+lr=$3
+N_MODEL=$4
+SAMPLE_PER_CLASS=$5
+gpu=$6
+epoch=$7
+MODEL=$8
 N_class=$9
 
-SCREEN_NAME="SYNTH_${DATASET}_${METHOD}_${N_MODEL}_${lr}_${epoch}_${SAMPLE_PER_CLASS}_${MODEL}.sh"
+SCREEN_NAME="real_${DATASET}_${METHOD}_${N_MODEL}_${lr}_${epoch}_${SAMPLE_PER_CLASS}_${MODEL}.sh"
 
 screen -S $SCREEN_NAME -dm bash -c "
 source ~/.bashrc
 conda activate /projets/Zdehghani/torch_env
 cd /projets/Zdehghani/Source_Free_Class_Unlearning
 CUDA_VISIBLE_DEVICES=$gpu \
-python -m main_files.main  \
+python -m main_files.main_real  \
     --dataset $DATASET \
     --mode CR \
     --cuda 0 \
@@ -30,8 +29,7 @@ python -m main_files.main  \
     --epochs $epoch  \
     --patience 50  \
     --samples_per_class $SAMPLE_PER_CLASS  \
-    --n_model $N_MODEL\
     --forget_mode multi \
-    --noise_type $NOISE \
+    --n_model $N_MODEL \
     --num_forget_classes $N_class
 "
