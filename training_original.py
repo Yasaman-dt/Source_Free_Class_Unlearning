@@ -88,7 +88,7 @@ def trainer(removed=None):
 
 
     if opt.dataset == 'cifar10':
-        os.makedirs(f'./weights/chks_cifar10/original', exist_ok=True)
+        os.makedirs(f'/projets/Zdehghani/Source_Free_Class_Unlearning/weights/chks_cifar10/original', exist_ok=True)
         # Load CIFAR-10 data
         trainset = torchvision.datasets.CIFAR10(root=opt.data_path, train=True, download=True, transform=transform_train)
         testset = torchvision.datasets.CIFAR10(root=opt.data_path, train=False, download=True, transform=transform_test)
@@ -97,7 +97,7 @@ def trainer(removed=None):
             model.fc = nn.Linear(model.fc.in_features, opt.num_classes).to('cuda')
 
     elif opt.dataset == 'cifar100':
-        os.makedirs(f'./weights/chks_cifar100/original', exist_ok=True)
+        os.makedirs(f'/projets/Zdehghani/Source_Free_Class_Unlearning/weights/chks_cifar100/original', exist_ok=True)
         trainset = torchvision.datasets.CIFAR100(root=opt.data_path, train=True, download=True, transform=transform_train)
         testset = torchvision.datasets.CIFAR100(root=opt.data_path, train=False, download=True, transform=transform_test)
         
@@ -108,7 +108,7 @@ def trainer(removed=None):
 
     elif opt.dataset == 'TinyImageNet':
         #dataloader
-        os.makedirs(f'./weights/chks_TinyImageNet/original', exist_ok=True)
+        os.makedirs(f'/projets/Zdehghani/Source_Free_Class_Unlearning/weights/chks_TinyImageNet/original', exist_ok=True)
         
         
         if opt.model == 'ViT':
