@@ -75,7 +75,7 @@ Produces a CSV with baseline metrics for later comparison.
 ```bash
 CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_singleclass.py
 ```
-**multi classes unlearning:**
+**multi class unlearning:**
 ```bash
 CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_multiclass.py
 ```
@@ -95,7 +95,7 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle.py \
   --run_rt_model
 ```
 
-**multi classes unlearning:**
+**multi class unlearning:**
 ```bash
 CUDA_VISIBLE_DEVICES=2 python -m model_preparation.training_oracle.py \
   --model resnet18 \
@@ -121,7 +121,7 @@ chmod +x job_real_cifar10.sh job_synth_cifar10.sh job_part_real_cifar10.sh job_p
 chmod +x job_real_cifar100.sh job_synth_cifar100.sh job_part_real_cifar100.sh job_part_synth_cifar100.sh
 chmod +x job_real_tiny.sh job_synth_tiny.sh job_part_real_tiny.sh job_part_synth_tiny.sh
 ```
-**multi classes unlearning:**
+**multi class unlearning:**
 ```bash
 cd scripts
 chmod +x job_multiclass_real_cifar100.sh job_multiclass_synth_cifar100.sh
@@ -138,7 +138,7 @@ Runs FC-only unlearning using embeddings computed from real data.
 # CIFAR-10, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0
 ./job_real_cifar10.sh FT 0.01 1 5000 0 200 resnet18
 ```
-**multi classes unlearning:**
+**multi class unlearning:**
 ```bash
 # CIFAR-100, ResNet-18, 500 samples/class, 1 model, 200 epochs on GPU 0, number of forget classes=10
 ./job_multiclass_real_cifar100.sh FT 0.01 1 500 0 200 resnet18 10
@@ -157,7 +157,7 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 # Gaussian synthetic samples
 ./job_synth_cifar10.sh FT 0.01 1 5000 0 200 resnet18 gaussian
 ```
-**multi classes unlearning:**
+**multi class unlearning:**
 ```bash
 # Gaussian synthetic samples
 ./job_multiclass_synth_cifar10.sh FT 0.01 1 500 0 200 resnet18 gaussian 10
