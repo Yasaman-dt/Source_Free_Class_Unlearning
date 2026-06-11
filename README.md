@@ -24,14 +24,14 @@ A source-free framework for **class unlearning** in image classification with op
 
 ## 0) Environment & Requirements
 
-All Python packages are listed in **`bash/requirements.txt`**.
+All Python packages are listed in **`requirements.txt`**.
 
 ```bash
 # Activate your conda environment (adjust to your path if needed)
 conda activate /projets/Zdehghani/torch_env
 
 # Install dependencies
-pip install -r bash/requirements.txt
+pip install -r requirements.txt
 ```
 
 ---
@@ -116,14 +116,14 @@ Make the job scripts executable once:
 
 **single class unlearning:**
 ```bash
-cd bash
+cd scripts
 chmod +x job_real_cifar10.sh job_synth_cifar10.sh job_part_real_cifar10.sh job_part_synth_cifar10.sh
 chmod +x job_real_cifar100.sh job_synth_cifar100.sh job_part_real_cifar100.sh job_part_synth_cifar100.sh
 chmod +x job_real_tiny.sh job_synth_tiny.sh job_part_real_tiny.sh job_part_synth_tiny.sh
 ```
 **multi classes unlearning:**
 ```bash
-cd bash
+cd scripts
 chmod +x job_multiclass_real_cifar100.sh job_multiclass_synth_cifar100.sh
 ```
 
@@ -201,16 +201,16 @@ CUDA_VISIBLE_DEVICES=0 python training_oracle.py --model resnet18 --dataset cifa
 CUDA_VISIBLE_DEVICES=0 python create_embeddings.py
 
 # FC-only unlearning (real embeddings) with DELETE on ResNet-18
-./bash/job_real_cifar10.sh DELETE 0.01 1 5000 0 100 resnet18
+./scripts/job_real_cifar10.sh DELETE 0.01 1 5000 0 100 resnet18
 
 # FC-only unlearning (synthetic) with DELETE on ResNet-18 + Gaussian
-./bash/job_synth_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18 gaussian
+./scripts/job_synth_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18 gaussian
 
 # Partial-layer unlearning (synthetic) with DELETE on ResNet-18
-./bash/job_part_synth_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18
+./scripts/job_part_synth_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18
 
 # Partial-layer unlearning (real) with DELETE on ResNet-18
-./bash/job_part_real_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18
+./scripts/job_part_real_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18
 ```
 
 
