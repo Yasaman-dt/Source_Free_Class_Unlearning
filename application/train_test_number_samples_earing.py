@@ -10,7 +10,6 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225]),
 ])
-
 male_idx = 20      # 'Male'
 earing_idx = 34   # 'earing' (0-based index in CelebA attrs)
 
@@ -20,9 +19,7 @@ def count_gender_earing(split):
                               transform=transform,
                               download=False)
     loader = DataLoader(dataset, batch_size=512, shuffle=False)
-
     fm = fn = mm = mn = 0  # female_earing, female_non_earing, male_earing, male_non_earing
-
     for _, attrs in loader:
         gender = attrs[:, male_idx]      # 0 = female, 1 = male
         earing = attrs[:, earing_idx]  # 0 = not earing, 1 = earing

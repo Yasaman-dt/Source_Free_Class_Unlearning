@@ -82,7 +82,6 @@ def evaluate_synthetic_embeddings(model, forget_embeddings, retain_embeddings, p
     return accuracy_forget, accuracy_retain
 
 
- 
 def evaluate_real_embeddings(model, test_loader, device, earing_idx=earing_idx, gender_idx=gender_idx):
     model.eval()
     total_forget, correct_forget, total_retain, correct_retain = 0, 0, 0, 0
@@ -182,6 +181,7 @@ def evaluate_real_groups(model, test_loader, device, earing_idx=earing_idx, gend
             earing_acc_overall, non_earing_acc_overall,
             female_acc_overall, male_acc_overall)
 
+
 def evaluate_real_marginals(model, test_loader, device,
                             earing_idx=earing_idx, gender_idx=gender_idx):
     """
@@ -272,7 +272,6 @@ criterion = nn.BCEWithLogitsLoss()
 for epoch in range(num_epochs):
     print(f"\n=== Epoch {epoch+1}/{num_epochs} ===")
 
-
     # Adjust beta based on current gap
     beta = 0.8
 
@@ -293,7 +292,6 @@ for epoch in range(num_epochs):
             pseudo_gender = gender_logits.argmax(dim=1)
             retain_mask = (pseudo_earing == 1) & (pseudo_gender == 1)
             forget_mask = ~retain_mask
-
 
         if retain_mask.sum() == 0 or forget_mask.sum() == 0:
             continue
@@ -355,4 +353,3 @@ for epoch in range(num_epochs):
 
 
     male_acc, female_acc, earing_acc, nonearing_acc = evaluate_real_marginals(model, test_loader, device)
-

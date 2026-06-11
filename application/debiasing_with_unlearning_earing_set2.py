@@ -27,7 +27,6 @@ class DualHeadResNet18(nn.Module):
         gender_output = self.gender_head(x)
         return earing_output, gender_output
 
-
 # -------------------------
 # Device & dataset
 # -------------------------
@@ -47,7 +46,6 @@ test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
 earing_idx = 34
 gender_idx = 20
-
 
 # -------------------------
 # Extract real embeddings (PRE-fc)
@@ -71,7 +69,6 @@ def extract_real_embeddings(model, dataloader, device):
     return (torch.cat(all_embeddings),
             torch.cat(all_earing_labels),
             torch.cat(all_gender_labels))
-
 
 # -------------------------
 # Evaluation on synthetic embeddings (optional)
@@ -158,7 +155,6 @@ def evaluate_real_marginals(model, test_loader, device,
     return male_acc, female_acc, earing_acc, nonearing_acc
 
 
-
 def evaluate_real_groups(model, test_loader, device, earing_idx=earing_idx, gender_idx=gender_idx):
     model.eval()
     correct_male_earing, total_male_earing = 0, 0
@@ -220,7 +216,6 @@ def evaluate_real_groups(model, test_loader, device, earing_idx=earing_idx, gend
 
     female_acc_overall = (female_correct / female_total * 100) if female_total > 0 else 0.0
     male_acc_overall = (male_correct / male_total * 100) if male_total > 0 else 0.0
-
 
     # print(f"Male Accuracy (overall): {male_acc_overall:.2f}%")
     # print(f"Female Accuracy (overall): {female_acc_overall:.2f}%")
@@ -346,12 +341,8 @@ print(f"[BASELINE] gap = {orig_gap:.2f}%")
 # -------------------------
 for epoch in range(num_epochs):
     print(f"\n=== Epoch {epoch+1}/{num_epochs} ===")
-
-
-
     # Weight between retain vs forget losses
     beta = 0.8
-
     # Train on synthetic embeddings
     model.train()
     syn_correct_forget, syn_total_forget = 0, 0

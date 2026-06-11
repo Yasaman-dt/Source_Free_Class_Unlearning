@@ -85,7 +85,6 @@ optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 earing_idx = 31  # Index for "Earing" label in CelebA
 gender_idx = 20
 
-
 # Initialize the best accuracy to a very low number
 best_test_accuracy = 0.0
 
