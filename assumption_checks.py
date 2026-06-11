@@ -47,9 +47,6 @@ def get_head_and_dims(net: nn.Module):
     return net, last, last.in_features, last.out_features
 
 
-
-
-
 # --------- helpers ----------
 def _as_forget_set(class_to_remove):
     if class_to_remove is None:
@@ -104,9 +101,6 @@ def _targets_used(method, logits, true_labels, forget_set, seed=0):
         f"Targets for method={method} not implemented in this checker. "
         "If this method uses CE/KL, we can add it."
     )
-
-
-
 
 
 def _ce_sign(method):
