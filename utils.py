@@ -4,7 +4,6 @@ import requests
 import torch
 from torchvision.models.resnet import resnet18,ResNet18_Weights,resnet34,ResNet34_Weights,resnet50,ResNet50_Weights
 from models import ViT
-#from resnet import resnet18 
 from sklearn import linear_model, model_selection
 import torch.nn as nn
 from opts import OPT as opt

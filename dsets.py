@@ -248,7 +248,6 @@ def get_dsets(file_fgt=None):
     val_loader = DataLoader(val_set, batch_size=opt.batch_size, drop_last=True, shuffle=False, num_workers=opt.num_workers)
 
     
-
     # construct indices of retain from those of the forget set
     forget_mask = np.zeros(len(train_set.targets), dtype=bool)
     forget_mask[forget_idx] = True
@@ -281,7 +280,6 @@ def get_surrogate(original_model=None):
             'subset_COCO': (0.2754, 0.2708, 0.2852),
             'subset_gaussian_noise': (1,1,1)
             }
-
 
 
     transform_list = [
