@@ -217,7 +217,7 @@ CUDA_VISIBLE_DEVICES=0 python create_embeddings.py
 ./scripts/job_part_real_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18
 ```
 
-## License
+## Citation
 
 If you find this work useful or relevant to your research, please consider citing our paper.
 
