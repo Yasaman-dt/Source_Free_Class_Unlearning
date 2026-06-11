@@ -44,7 +44,7 @@ Trains N independently initialized models on the chosen dataset/backbone. These 
 cd Source_Free_Class_Unlearning/
 
 # Example: 1 original ResNet-18 on CIFAR-10
-CUDA_VISIBLE_DEVICES=0 python training_original.py \
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original.py \
   --model resnet18 \
   --dataset cifar10 \
   --run_original \
@@ -73,11 +73,11 @@ Produces a CSV with baseline metrics for later comparison.
 
 **single class unlearning:**
 ```bash
-CUDA_VISIBLE_DEVICES=0 python -m test_models.test_originalmodel_singleclass.py
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_singleclass.py
 ```
 **multi classes unlearning:**
 ```bash
-CUDA_VISIBLE_DEVICES=0 python -m test_models.test_originalmodel_multiclass.py
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_multiclass.py
 ```
 
 ---
@@ -88,7 +88,7 @@ The **Oracle** is the upper bound which is the retrained model from scratch with
 
 **single class unlearning:**
 ```bash
-CUDA_VISIBLE_DEVICES=0 python training_oracle.py \
+CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle.py \
   --model resnet18 \
   --dataset cifar10 \
   --mode CR \
