@@ -121,7 +121,7 @@ Make the job scripts executable once:
 **single class unlearning:**
 ```bash
 cd scripts
-chmod +x job_singleclass_real.sh job_singleclass_synth.sh job_singleclass_part_real.sh job_singleclass_part_synth.sh
+chmod +x job_singleclass_real.sh job_singleclass_synth.sh job_singleclass_real_part.sh job_singleclass_synth_part.sh
 ```
 **multi class unlearning:**
 ```bash
@@ -172,7 +172,7 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 **Args:** `DATASET METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL`
 
 ```bash
-./job_singleclass_part_real.sh cifar100 FT 0.01 1 5000 0 200 resnet18
+./job_singleclass_real_part.sh cifar100 FT 0.01 1 5000 0 200 resnet18
 ```
 
 ---
@@ -182,7 +182,7 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 **Args:** `DATASET METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL`
 
 ```bash
-./job_singleclass_part_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18
+./job_singleclass_synth_part.sh cifar100 FT 0.01 1 5000 0 200 resnet18
 ```
 
 ---
@@ -209,10 +209,10 @@ CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
 ./scripts/job_singleclass_synth.sh DELETE 0.01 1 5000 0 200 resnet18 gaussian
 
 # Partial-layer unlearning (synthetic) with DELETE on ResNet-18
-./scripts/job_singleclass_part_synth.sh DELETE 0.01 1 5000 0 200 resnet18
+./scripts/job_singleclass_synth_part.sh DELETE 0.01 1 5000 0 200 resnet18
 
 # Partial-layer unlearning (real) with DELETE on ResNet-18
-./scripts/job_singleclass_part_real.sh DELETE 0.01 1 5000 0 200 resnet18
+./scripts/job_singleclass_real_part.sh DELETE 0.01 1 5000 0 200 resnet18
 ```
 
 ## Citation
