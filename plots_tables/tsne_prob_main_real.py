@@ -17,8 +17,8 @@ N=50
 
 
 # File paths
-DIR = "/projets/Zdehghani/MU_data_free"
-#DIR = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free"
+DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
+#DIR = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning"
 
 checkpoint_dir = f"{DIR}/checkpoints_main_real/{dataset_name}/{method}/samples_per_class_5000"
 embedding_file = f"{DIR}/tsne/tsne_main_real/{dataset_name}/{method}/real_embeddings_{dataset_name}_seed_{seed}_m{n_model}_n{N}.npz"
@@ -40,8 +40,8 @@ def load_reamaining(model_path):
     return classifier
 
 
-#original_model_path = f"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/weights/chks_{dataset_name}/original/best_checkpoint_resnet18_m{n_model}.pth"
-original_model_path = f"/projets/Zdehghani/MU_data_free/weights/chks_{dataset_name}/original/best_checkpoint_resnet18_m{n_model}.pth"
+#original_model_path = f"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/weights/chks_{dataset_name}/original/best_checkpoint_resnet18_m{n_model}.pth"
+original_model_path = f"/projets/Zdehghani/Source_Free_Class_Unlearning/weights/chks_{dataset_name}/original/best_checkpoint_resnet18_m{n_model}.pth"
 unlearned_model_path = os.path.join(checkpoint_dir, f"resnet18_best_checkpoint_seed[{seed}]_class[{forget_class}]_m{n_model}_lr{lr}.pt")
 
 original_model = load_reamaining(original_model_path)

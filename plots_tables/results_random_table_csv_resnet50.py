@@ -6,7 +6,7 @@ import numpy as np
 
 
 # === Setup paths ===
-parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet50"
+parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet50"
 sources = [
     ("results_real", "real"),
     ("results_synth_gaussian", "synth"),
@@ -62,7 +62,7 @@ original_summary.columns = ['_'.join(col).strip() for col in original_summary.co
 
 original_summary = original_summary.reset_index()
 
-original_summary.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet50/original_averaged_results_resnet50.csv", index=False)
+original_summary.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet50/original_averaged_results_resnet50.csv", index=False)
 
 metrics = ['val_test_retain_acc', 'val_test_fgt_acc', 'val_full_retain_acc', 'val_full_fgt_acc', 'AUS']
 
@@ -107,7 +107,7 @@ AUS = 1 - ((val_test_retain_acc_original - val_test_retain_acc_retrained)/100)
 retrained_df["AUS"] = AUS
 
 # Save the combined DataFrame
-output_path = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet50/results_retrained_resnet50.csv"
+output_path = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet50/results_retrained_resnet50.csv"
 retrained_df.to_csv(output_path, index=False)
 
 
@@ -253,7 +253,7 @@ if all_data:
     
     # === Combine original + best_df
     combined_df = pd.concat([best_df, original_df, retrained_df], ignore_index=True)
-    combined_df.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet50/results_total_resnet50.csv", index=False)
+    combined_df.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet50/results_total_resnet50.csv", index=False)
 
 
     # === Compute mean and std for all numeric columns, grouped by dataset/method/model/source

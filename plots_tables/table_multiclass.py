@@ -9,7 +9,7 @@ import pandas as pd
 #  Paths and configuration
 # ============================================================
 
-parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free"
+parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning"
 
 # Folders that contain the per-method subfolders
 sources = [
@@ -88,7 +88,7 @@ original_summary.columns = ['_'.join(col).strip() for col in original_summary.co
 
 original_summary = original_summary.reset_index()
 
-original_summary.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/multi_class/original_averaged_results_resnet18.csv", index=False)
+original_summary.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/multi_class/original_averaged_results_resnet18.csv", index=False)
 
 metrics = ['val_test_retain_acc', 'val_test_fgt_acc', 'val_full_retain_acc', 'val_full_fgt_acc', 'AUS']
 
@@ -130,7 +130,7 @@ AUS = 1 - ((val_test_retain_acc_original - val_test_retain_acc_retrained)/100)
 retrained_df["AUS"] = AUS
 
 # Save the combined DataFrame
-output_path = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/multi_class/results_retrained_resnet18.csv"
+output_path = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/multi_class/results_retrained_resnet18.csv"
 retrained_df.to_csv(output_path, index=False)
 
 

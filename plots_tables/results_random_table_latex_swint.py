@@ -1,7 +1,7 @@
 import pandas as pd
 from collections import defaultdict, Counter
 
-swint_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_swint/results_mean_std_all_numeric_swint.csv")
+swint_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_swint/results_mean_std_all_numeric_swint.csv")
 
 # Add architecture column
 swint_df["arch"] = "swint"
@@ -642,5 +642,5 @@ latex.append(r"\end{tabular}")
 latex.append(r"}")  # closing resizebox
 latex.append(r"\end{table*}")
 
-with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_swint/CIFAR-10_unlearning_table_per_class_head_swint.tex", "w") as f:
+with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_swint/CIFAR-10_unlearning_table_per_class_head_swint.tex", "w") as f:
     f.write("\n".join(latex))

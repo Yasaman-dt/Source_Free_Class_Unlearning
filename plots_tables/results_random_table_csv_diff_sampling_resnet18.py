@@ -6,7 +6,7 @@ import numpy as np
 
 
 # === Setup paths ===
-parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free"
+parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning"
 sources = [
     ("results_fc_resnet18/results_real", "real"),
     ("results_fc_resnet18/results_synth_gaussian", "synth"),
@@ -70,7 +70,7 @@ original_summary.columns = ['_'.join(col).strip() for col in original_summary.co
 
 original_summary = original_summary.reset_index()
 
-original_summary.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet18/results_diff_sampling/original_averaged_results.csv", index=False)
+original_summary.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet18/results_diff_sampling/original_averaged_results.csv", index=False)
 
 metrics = ['val_test_retain_acc', 'val_test_fgt_acc', 'val_full_retain_acc', 'val_full_fgt_acc', 'AUS']
 
@@ -171,7 +171,7 @@ retrained_df['AUS'] = 1 - (
 # retrained_df['AUS'] = retrained_df['AUS'].clip(0, 1)  # optional
 
 # Save the combined DataFrame
-output_path = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet18/results_diff_sampling/results_retrained.csv"
+output_path = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet18/results_diff_sampling/results_retrained.csv"
 retrained_df.to_csv(output_path, index=False)
 
 all_data = []
@@ -326,7 +326,7 @@ if all_data:
     
     # === Combine original + best_df
     combined_df = pd.concat([best_df, original_df, retrained_df], ignore_index=True)
-    combined_df.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet18/results_diff_sampling/results_total.csv", index=False)
+    combined_df.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet18/results_diff_sampling/results_total.csv", index=False)
 
 
 
@@ -352,7 +352,7 @@ from collections import defaultdict
 
 
 # Load the stats DataFrame
-stats_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet18/results_diff_sampling/results_mean_std_all_numeric.csv")
+stats_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet18/results_diff_sampling/results_mean_std_all_numeric.csv")
 
 # Select key columns to display
 columns_to_display = [
@@ -675,7 +675,7 @@ latex_table += r"""\bottomrule
 """
 
 # === Save to file (UTF-8)
-with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet18/results_diff_sampling/results_diff_sampling_resnet18.tex", "w", encoding="utf-8") as f:
+with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet18/results_diff_sampling/results_diff_sampling_resnet18.tex", "w", encoding="utf-8") as f:
     f.write(latex_table)
 
 print("✅ LaTeX table saved to results_diff_sampling_resnet18.tex")

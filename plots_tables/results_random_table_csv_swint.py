@@ -6,7 +6,7 @@ import numpy as np
 
 
 # === Setup paths ===
-parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_swint"
+parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_swint"
 sources = [
     ("results_real", "real"),
     ("results_synth_gaussian_10000perclass", "synth"),
@@ -63,7 +63,7 @@ original_summary.columns = ['_'.join(col).strip() for col in original_summary.co
 
 original_summary = original_summary.reset_index()
 
-original_summary.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_swint/original_averaged_results_swint.csv", index=False)
+original_summary.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_swint/original_averaged_results_swint.csv", index=False)
 
 metrics = ['val_test_retain_acc', 'val_test_fgt_acc', 'val_full_retain_acc', 'val_full_fgt_acc', 'AUS']
 
@@ -179,7 +179,7 @@ retrained_df['AUS'] = 1 - (
 
 
 # Save the combined DataFrame
-output_path = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_swint/results_retrained_swint.csv"
+output_path = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_swint/results_retrained_swint.csv"
 retrained_df.to_csv(output_path, index=False)
 
 all_data = []
@@ -327,7 +327,7 @@ if all_data:
     combined_df = pd.concat([best_df, original_df, retrained_df], ignore_index=True)
     #combined_df = pd.concat([best_df, original_df], ignore_index=True)
 
-    combined_df.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_swint/results_total_swint.csv", index=False)
+    combined_df.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_swint/results_total_swint.csv", index=False)
 
 
     col = 'val_test_fgt_acc'

@@ -1,7 +1,7 @@
 import pandas as pd
 from collections import defaultdict, Counter
 
-ViT_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_ViT/results_mean_std_all_numeric_ViT.csv")
+ViT_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_ViT/results_mean_std_all_numeric_ViT.csv")
 
 # Add architecture column
 ViT_df["arch"] = "ViT"
@@ -329,7 +329,7 @@ latex_table += r"""\bottomrule
 """
 
 # === Save to file (UTF-8)
-with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_ViT/table_total_random_head_ViT.tex", "w", encoding="utf-8") as f:
+with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_ViT/table_total_random_head_ViT.tex", "w", encoding="utf-8") as f:
     f.write(latex_table)
 
 print("✅ LaTeX table saved to table_total_random_fc.tex")
@@ -337,7 +337,7 @@ print("✅ LaTeX table saved to table_total_random_fc.tex")
 
 
 # Load the uploaded data
-df_latex_input = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_ViT/mean_std_results_by_class_model_dataset_method_source_ViT.csv")
+df_latex_input = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_ViT/mean_std_results_by_class_model_dataset_method_source_ViT.csv")
 
 # Filter only for CIFAR-10 dataset
 cifar10_df = df_latex_input[df_latex_input["dataset"] == "cifar10"].copy()
@@ -642,5 +642,5 @@ latex.append(r"\end{tabular}")
 latex.append(r"}")  # closing resizebox
 latex.append(r"\end{table*}")
 
-with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_ViT/CIFAR-10_unlearning_table_per_class_head_ViT.tex", "w") as f:
+with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_ViT/CIFAR-10_unlearning_table_per_class_head_ViT.tex", "w") as f:
     f.write("\n".join(latex))

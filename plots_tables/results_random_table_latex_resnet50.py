@@ -3,7 +3,7 @@ from collections import defaultdict
 
 
 # Load the stats DataFrame
-stats_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet50/results_mean_std_all_numeric_resnet50.csv")
+stats_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet50/results_mean_std_all_numeric_resnet50.csv")
 
 # Select key columns to display
 columns_to_display = [
@@ -585,5 +585,5 @@ latex.append(r"\end{tabular}")
 latex.append(r"}")  # closing resizebox
 latex.append(r"\end{table*}")
 
-with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet50/CIFAR-10_unlearning_table_per_class_fc_resnet50.tex", "w") as f:
+with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet50/CIFAR-10_unlearning_table_per_class_fc_resnet50.tex", "w") as f:
     f.write("\n".join(latex))

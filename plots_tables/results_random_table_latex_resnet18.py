@@ -3,7 +3,7 @@ from collections import defaultdict
 
 
 # Load the stats DataFrame
-stats_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet18/results_mean_std_all_numeric_resnet18.csv")
+stats_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet18/results_mean_std_all_numeric_resnet18.csv")
 
 # Select key columns to display
 columns_to_display = [
@@ -258,14 +258,14 @@ latex_table += r"""\bottomrule
 """
 
 # === Save to file (UTF-8)
-with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet18/table_total_random_fc_resnet18.tex", "w", encoding="utf-8") as f:
+with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet18/table_total_random_fc_resnet18.tex", "w", encoding="utf-8") as f:
     f.write(latex_table)
 
 print("✅ LaTeX table saved to combined_table.tex")
 
 
 # Load the uploaded data
-df_latex_input = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet18/mean_std_results_by_class_model_dataset_method_source_resnet18.csv")
+df_latex_input = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet18/mean_std_results_by_class_model_dataset_method_source_resnet18.csv")
 
 # Filter only for CIFAR-10 dataset
 cifar10_df = df_latex_input[df_latex_input["dataset"] == "cifar10"].copy()
@@ -569,5 +569,5 @@ latex.append(r"\end{tabular}")
 latex.append(r"}")  # closing resizebox
 latex.append(r"\end{table*}")
 
-with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet18/CIFAR-10_unlearning_table_per_class_fc_resnet18.tex", "w") as f:
+with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet18/CIFAR-10_unlearning_table_per_class_fc_resnet18.tex", "w") as f:
     f.write("\n".join(latex))

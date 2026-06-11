@@ -50,7 +50,7 @@ plt.rc('legend', labelcolor='black')  # Ensures legend text is black
 # #     'font.family': 'serif',
 # })
 
-parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/"
+parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/"
 
 # Load the data
 stats_path = os.path.join(parent_dir, "results_n_samples/results_unlearning_best_per_model_by_aus.csv")
@@ -128,8 +128,8 @@ def plot_with_black_box(plot_obj, filename):
             plt.gcf().add_artist(rect)
     
     # Save and show the plot
-    plt.savefig(f"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_n_samples/{filename}.png", dpi=600, bbox_inches='tight')
-    plt.savefig(f"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_n_samples/{filename}.pdf", dpi=600, bbox_inches='tight')
+    plt.savefig(f"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_n_samples/{filename}.png", dpi=600, bbox_inches='tight')
+    plt.savefig(f"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_n_samples/{filename}.pdf", dpi=600, bbox_inches='tight')
 
     plt.show()
 

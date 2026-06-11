@@ -13,7 +13,7 @@ from create_embeddings_utils import get_model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # ------------------ Load Pre-Trained ResNet-18 and Run the Function ------------------
-DIR = "/projets/Zdehghani/MU_data_free"
+DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
 checkpoint_folder = "checkpoints"
 weights_folder = "weights"
 embeddings_folder = "embeddings"

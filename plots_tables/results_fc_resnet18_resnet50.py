@@ -2,8 +2,8 @@ import pandas as pd
 from collections import defaultdict, Counter
 
 # Load both ResNet-18 and ResNet-50 result files
-resnet18_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet18/results_mean_std_all_numeric_resnet18.csv")
-resnet50_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc_resnet50/results_mean_std_all_numeric_resnet50.csv")
+resnet18_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet18/results_mean_std_all_numeric_resnet18.csv")
+resnet50_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc_resnet50/results_mean_std_all_numeric_resnet50.csv")
 
 # Add architecture column
 resnet18_df["arch"] = "resnet18"
@@ -348,7 +348,7 @@ latex_table += r"""\bottomrule
 """
 
 # === Save to file (UTF-8)
-with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc/table_total_random_fc_CNN.tex", "w", encoding="utf-8") as f:
+with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc/table_total_random_fc_CNN.tex", "w", encoding="utf-8") as f:
     f.write(latex_table)
 
 print("✅ LaTeX table saved to table_total_random_fc.tex")

@@ -5,7 +5,7 @@ from glob import glob
 import matplotlib.pyplot as plt
 
 # === Setup paths ===
-parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/"
+parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/"
 original_path = os.path.join(parent_dir, "results_head_ViT/results_real/results_original_ViT.csv")
 
 original_df = pd.read_csv(original_path)
@@ -241,7 +241,7 @@ if all_data:
     
     # === Combine original + best_df
     combined_df = pd.concat([best_df], ignore_index=True)
-    combined_df.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_n_samples_ViT/results_total.csv", index=False)
+    combined_df.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_n_samples_ViT/results_total.csv", index=False)
 
     print("✅ Merged original results with current best results.")
     

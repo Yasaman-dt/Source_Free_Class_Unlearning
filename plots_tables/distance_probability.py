@@ -11,7 +11,7 @@ from create_embeddings_utils import get_model
 # ============================================================
 # Configuration
 # ============================================================
-DIR = "/projets/Zdehghani/MU_data_free"
+DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
 TSNE_ROOT = os.path.join(DIR, "tsne/tsne_main")
 WEIGHTS_ROOT = os.path.join(DIR, "weights")
 

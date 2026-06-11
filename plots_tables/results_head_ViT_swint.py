@@ -2,8 +2,8 @@ import pandas as pd
 from collections import defaultdict, Counter
 
 # Load both ResNet-18 and ResNet-50 result files
-ViT_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_ViT/results_mean_std_all_numeric_ViT.csv")
-swint_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_head_swint/results_mean_std_all_numeric_swint.csv")
+ViT_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_ViT/results_mean_std_all_numeric_ViT.csv")
+swint_df = pd.read_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_head_swint/results_mean_std_all_numeric_swint.csv")
 
 # Add architecture column
 ViT_df["arch"] = "ViT"
@@ -342,7 +342,7 @@ latex_table += r"""\bottomrule
 """
 
 # === Save to file (UTF-8)
-with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free/results_fc/table_total_random_head_transformer.tex", "w", encoding="utf-8") as f:
+with open("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/results_fc/table_total_random_head_transformer.tex", "w", encoding="utf-8") as f:
     f.write(latex_table)
 
 print("✅ LaTeX table saved to table_total_random_fc.tex")
