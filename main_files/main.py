@@ -456,7 +456,7 @@ if __name__ == "__main__":
             real_embeddings_np = real_embeddings  # shape: (50000, D)
             real_labels_np = real_labels  # shape: (50000,)
 
-            # N = 5000
+            #N = 5000
 
             # #Select 50 per class
             # real_embeddings_par, real_labels_par = select_n_per_class_numpy(
@@ -465,14 +465,14 @@ if __name__ == "__main__":
 
 
             
-            save_path = f"{opt.root_folder}/tsne/tsne_main/{opt.model}/{opt.dataset}/{opt.method}/real_embeddings_{dataset_name_lower}_seed_{i}_m{n_model}_n{N}.npz"
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            # save_path = f"{opt.root_folder}/tsne/tsne_main/{opt.model}/{opt.dataset}/{opt.method}/real_embeddings_{dataset_name_lower}_seed_{i}_m{n_model}_n{N}.npz"
+            # os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-            np.savez_compressed(
-                save_path,
-                real_embeddings=real_embeddings_np,
-                real_labels=real_labels_np
-            )
+            # np.savez_compressed(
+            #     save_path,
+            #     real_embeddings=real_embeddings_np,
+            #     real_labels=real_labels_np
+            # )
 
             # np.savez_compressed(
             #     save_path,
