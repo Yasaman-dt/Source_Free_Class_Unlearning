@@ -14,7 +14,7 @@ SCREEN_NAME="real_${RUN_MODEL}_${METHOD}_${N_MODEL}_${lr}_${epoch}_${SAMPLE_PER_
 screen -S $SCREEN_NAME -dm bash -c "
 source ~/.bashrc
 conda activate /projets/Zdehghani/torch_env
-cd /projets/Zdehghani/MU_data_free
+cd /projets/Zdehghani/Source_Free_Class_Unlearning
 CUDA_VISIBLE_DEVICES=$gpu \
 python main_real.py  \
     --run_name $RUN_MODEL \
