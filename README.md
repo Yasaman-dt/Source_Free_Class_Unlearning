@@ -97,7 +97,7 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle.py \
 
 **multi classes unlearning:**
 ```bash
-CUDA_VISIBLE_DEVICES=2 python training_oracle.py \
+CUDA_VISIBLE_DEVICES=2 python -m model_preparation.training_oracle.py \
   --model resnet18 \
   --dataset cifar100 \
   --mode CR \
