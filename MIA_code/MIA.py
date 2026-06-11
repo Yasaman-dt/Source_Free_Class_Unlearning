@@ -5,7 +5,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from opts import OPT as opt
+from tools.opts import OPT as opt
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import adjusted_mutual_info_score
 from sklearn.svm import SVC
