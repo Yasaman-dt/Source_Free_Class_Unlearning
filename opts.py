@@ -43,7 +43,7 @@ def get_args():
     parser.add_argument("--n_model", type=int, default=0, help="Model number")
     
     parser.add_argument('--noise_type', type=str, default='gaussian',
-                        choices=['gaussian', 'bernoulli', 'uniform', 'laplace', 'gumbel'],
+                        choices=['gaussian', 'uniform', 'laplace'],
                         help='Type of noise distribution for synthetic feature generation')
 
 
