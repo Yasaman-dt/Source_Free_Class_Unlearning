@@ -15,7 +15,6 @@ import wandb
 
 run = wandb.init()
 
-
 mean = {
         'cifar10': (0.4914, 0.4822, 0.4465),
         'cifar100': (0.5071, 0.4867, 0.4408),
@@ -27,7 +26,6 @@ std = {
         'cifar100': (0.2675, 0.2565, 0.2761),
         'TinyImageNet': (0.229, 0.224, 0.225),
         }
-
 
 transform_train = transforms.Compose([
     transforms.RandomHorizontalFlip(),
