@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader, TensorDataset
 import torch.nn as nn
 
 
-
 def _last_linear(module: nn.Module) -> nn.Linear:
     """
     Find the last nn.Linear inside a module (e.g., inside an nn.Sequential).
