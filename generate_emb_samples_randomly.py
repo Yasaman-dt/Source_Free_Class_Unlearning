@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 import torchvision.models as models
-from create_embeddings_utils import get_model
+from embedding_extraction.create_embeddings_utils import get_model
 from torch.utils.data import DataLoader, TensorDataset
 import torch.nn as nn
 
@@ -69,14 +69,10 @@ def generate_emb_samples_balanced(num_classes, samples_per_class, net, noise_typ
         # Generate random synthetic samples in *feature space*
         if noise_type == "gaussian":
             feature_samples = torch.randn(batch_size, embedding_dim, device=device)
-        elif noise_type == "bernoulli":
-            feature_samples = torch.bernoulli(torch.full((batch_size, embedding_dim), 0.5, device=device))
         elif noise_type == "uniform":
             feature_samples = torch.empty(batch_size, embedding_dim, device=device).uniform_(-1, 1)
         elif noise_type == "laplace":
             feature_samples = torch.distributions.Laplace(0.0, 1.0).sample((batch_size, embedding_dim)).to(device)
-        elif noise_type == "gumbel":
-            feature_samples = torch.distributions.Gumbel(0.0, 1.0).sample((batch_size, embedding_dim)).to(device)
         else:
             raise ValueError(f"Unsupported noise type: {noise_type}")
 

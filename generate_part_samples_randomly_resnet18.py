@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 import torchvision.models as models
-from create_embeddings_utils import get_model
+from embedding_extraction.create_embeddings_utils import get_model
 from torch.utils.data import DataLoader, TensorDataset
 
 
