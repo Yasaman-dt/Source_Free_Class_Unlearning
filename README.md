@@ -41,7 +41,7 @@ pip install -r requirements.txt
 Trains N independently initialized models on the chosen dataset/backbone. These serve as your **baseline**.
 
 ```bash
-cd MU_data_free/
+cd Source_Free_Class_Unlearning/
 
 # Example: 1 original ResNet-18 on CIFAR-10
 CUDA_VISIBLE_DEVICES=0 python training_original.py \

@@ -141,7 +141,7 @@ def evaluate_model(model, data_loader, device):
         
         
 # # ------------------ Load Pre-Trained ResNet-18 and Run the Function ------------------
-# DIR = "/projets/Zdehghani/MU_data_free"
+# DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
 # checkpoint_folder = "checkpoints"
 # weights_folder = "weights"
 # embeddings_folder = "embeddings"

@@ -13,8 +13,8 @@ from create_embeddings_utils import (
 )
 from tqdm.auto import tqdm
 
-#DIR = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/MU_data_free"
-DIR = "/projets/Zdehghani/MU_data_free"
+#DIR = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning"
+DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
 
 folder = "embeddings"
 datasets_folder = "datasets"

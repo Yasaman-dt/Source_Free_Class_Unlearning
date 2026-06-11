@@ -34,7 +34,7 @@ model_name = opt.model.upper()
 num_classes = DATASET_NUM_CLASSES[dataset_name_upper]
 n_model = opt.n_model
 
-DIR = "/projets/Zdehghani/MU_data_free"
+DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
 weights_folder = "weights"
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'

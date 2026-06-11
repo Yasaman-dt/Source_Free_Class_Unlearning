@@ -6,7 +6,7 @@ import pandas as pd
 import os
 from create_embeddings_utils import get_model
 
-DIR = "/projets/Zdehghani/MU_data_free"
+DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
 weights_folder = "weights"
 embeddings_folder = "embeddings"
 model_name = 'resnet18'

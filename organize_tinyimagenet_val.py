@@ -1,7 +1,7 @@
 import os
 import shutil
 
-data_dir = "/projets/Zdehghani/MU_scar/data/tiny-imagenet-200"
+data_dir = "/projets/Zdehghani/Source_Free_Class_Unlearning/datasets/tiny-imagenet-200"
 val_dir = os.path.join(data_dir, "val")
 val_img_dir = os.path.join(val_dir, "images")
 val_annotations = os.path.join(val_dir, "val_annotations.txt")

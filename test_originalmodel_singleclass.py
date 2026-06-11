@@ -16,7 +16,7 @@ from create_embeddings_utils import get_model
 import pandas as pd
 import os
 
-DIR = "/projets/Zdehghani/MU_data_free"
+DIR = "/projets/Zdehghani/Source_Free_Class_Unlearning"
 checkpoint_folder = "checkpoints"
 weights_folder = "weights"
 embeddings_folder = "embeddings"
