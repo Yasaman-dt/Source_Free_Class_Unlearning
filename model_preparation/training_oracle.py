@@ -29,8 +29,6 @@ std = {
         'TinyImageNet': (0.229, 0.224, 0.225),
         }
 
-
-
 transform_train = transforms.Compose([
     transforms.RandomHorizontalFlip(),
     transforms.RandomCrop(32, padding=4),
