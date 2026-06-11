@@ -12,7 +12,7 @@ import os
 import torch
 import numpy as np
 from generate_emb_samples_randomly import generate_emb_samples_balanced
-from create_embeddings_utils import get_model
+from embedding_extraction.create_embeddings_utils import get_model
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt

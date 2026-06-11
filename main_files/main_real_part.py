@@ -11,7 +11,7 @@ from error_propagation import Complex
 import os
 import torch
 import numpy as np
-from create_embeddings_utils import get_model
+from embedding_extraction.create_embeddings_utils import get_model
 from torch.utils.data import TensorDataset, DataLoader
 from torchvision.datasets import CIFAR10, CIFAR100
 from torch.utils.data import Subset
