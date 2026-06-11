@@ -121,14 +121,12 @@ Make the job scripts executable once:
 **single class unlearning:**
 ```bash
 cd scripts
-chmod +x job_real_cifar10.sh job_synth_cifar10.sh job_part_real_cifar10.sh job_part_synth_cifar10.sh
-chmod +x job_real_cifar100.sh job_synth_cifar100.sh job_part_real_cifar100.sh job_part_synth_cifar100.sh
-chmod +x job_real_tiny.sh job_synth_tiny.sh job_part_real_tiny.sh job_part_synth_tiny.sh
+chmod +x job_singleclass_real.sh job_singleclass_synth.sh job_singleclass_part_real.sh job_singleclass_part_synth.sh
 ```
 **multi class unlearning:**
 ```bash
 cd scripts
-chmod +x job_multiclass_real_cifar100.sh job_multiclass_synth_cifar100.sh
+chmod +x job_multiclass_real.sh job_multiclass_synth.sh
 ```
 
 ### A) FC-only unlearning with **real** embeddings
@@ -139,13 +137,13 @@ Runs FC-only unlearning using embeddings computed from real data.
 
 **single class unlearning:**
 ```bash
-# CIFAR-10, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0
-./job_real_cifar10.sh FT 0.01 1 5000 0 200 resnet18
+# CIFAR-100, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0
+./job_singleclass_real.sh cifar100 FT 0.01 1 5000 0 200 resnet18
 ```
 **multi class unlearning:**
 ```bash
 # CIFAR-100, ResNet-18, 500 samples/class, 1 model, 200 epochs on GPU 0, number of forget classes=10
-./job_multiclass_real_cifar100.sh FT 0.01 1 500 0 200 resnet18 10
+./job_multiclass_real.sh cifar100 FT 0.01 1 500 0 200 resnet18 10
 ```
 
 ---
@@ -154,37 +152,37 @@ Runs FC-only unlearning using embeddings computed from real data.
 
 Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 
-**Args:** `METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL NOISE`
+**Args:** `DATASET METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL NOISE`
 
 **single class unlearning:**
 ```bash
 # Gaussian synthetic samples
-./job_synth_cifar10.sh FT 0.01 1 5000 0 200 resnet18 gaussian
+./job_singleclass_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18 gaussian
 ```
 **multi class unlearning:**
 ```bash
 # Gaussian synthetic samples
-./job_multiclass_synth_cifar10.sh FT 0.01 1 500 0 200 resnet18 gaussian 10
+./job_multiclass_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18 gaussian 10
 ```
 
 ---
 
 ### C) Partial-layer unlearning (**before the last conv**) with **real** embeddings
 
-**Args:** `METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL`
+**Args:** `DATASET METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL`
 
 ```bash
-./job_part_real_cifar10.sh FT 0.01 1 5000 0 200 resnet18
+./job_singleclass_part_real.sh cifar100 FT 0.01 1 5000 0 200 resnet18
 ```
 
 ---
 
 ### D) Partial-layer unlearning (**before the last conv**) with **synthetic** samples
 
-**Args:** `METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL`
+**Args:** `DATASET METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL`
 
 ```bash
-./job_part_synth_cifar10.sh FT 0.01 1 5000 0 200 resnet18
+./job_singleclass_part_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18
 ```
 
 ---
@@ -205,16 +203,16 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle --model resne
 CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
 
 # FC-only unlearning (real embeddings) with DELETE on ResNet-18
-./scripts/job_real_cifar10.sh DELETE 0.01 1 5000 0 100 resnet18
+./scripts/job_singleclass_real.sh DELETE 0.01 1 5000 0 100 resnet18
 
 # FC-only unlearning (synthetic) with DELETE on ResNet-18 + Gaussian
-./scripts/job_synth_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18 gaussian
+./scripts/job_singleclass_synth.sh DELETE 0.01 1 5000 0 200 resnet18 gaussian
 
 # Partial-layer unlearning (synthetic) with DELETE on ResNet-18
-./scripts/job_part_synth_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18
+./scripts/job_singleclass_part_synth.sh DELETE 0.01 1 5000 0 200 resnet18
 
 # Partial-layer unlearning (real) with DELETE on ResNet-18
-./scripts/job_part_real_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18
+./scripts/job_singleclass_part_real.sh DELETE 0.01 1 5000 0 200 resnet18
 ```
 
 ## Citation
