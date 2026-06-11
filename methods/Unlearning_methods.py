@@ -3,10 +3,10 @@ import torchvision
 from torch import nn 
 from torch import optim
 from torch.nn import functional as F
-from opts import OPT as opt
+from tools.opts import OPT as opt
 import pickle
 from tqdm import tqdm
-from utils import accuracy
+from tools.utils import accuracy
 import time
 from copy import deepcopy
 from error_propagation import Complex
@@ -17,7 +17,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from itertools import cycle
 import time
 from collections import defaultdict
-from assumption_checks import run_assumption_checks
+from tools.assumption_checks import run_assumption_checks
 
 
 n_model = opt.n_model
