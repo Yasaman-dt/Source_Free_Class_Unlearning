@@ -1,9 +1,9 @@
 from copy import deepcopy
 import pandas as pd
 from error_propagation import Complex
-from utils import accuracy, set_seed, get_retrained_model, get_trained_model
+from tools.utils import accuracy, set_seed, get_retrained_model, get_trained_model
 from MIA_code.MIA import get_MIA_SVC
-from opts import OPT as opt
+from tools.opts import OPT as opt
 import time
 from methods.Unlearning_methods import choose_method
 from methods.Unlearning_methods import calculate_accuracy
@@ -17,7 +17,8 @@ from torch.utils.data import TensorDataset, DataLoader
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import torch.nn as nn
-from assumption_checks import run_assumption_checks
+from tools.assumption_checks import run_assumption_checks
+
 
 DATASET_NUM_CLASSES = {
     "CIFAR10": 10,

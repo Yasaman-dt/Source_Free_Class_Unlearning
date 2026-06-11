@@ -1,9 +1,9 @@
 from copy import deepcopy
 import pandas as pd
 from error_propagation import Complex
-from utils import accuracy, set_seed, get_retrained_model, get_trained_model
+from tools.utils import accuracy, set_seed, get_retrained_model, get_trained_model
 from MIA_code.MIA import get_MIA_SVC
-from opts import OPT as opt
+from tools.opts import OPT as opt
 import time
 from methods.Unlearning_methods_real import choose_method
 from methods.Unlearning_methods_real import calculate_accuracy
