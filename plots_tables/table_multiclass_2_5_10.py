@@ -13,8 +13,8 @@ parent_dir = r"C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classificatio
 
 # Folders that contain the per-method subfolders
 sources = [
-    ("multi_class/results_real/samples_per_class_500", None, "real"),
-    ("multi_class/results_synth_gaussian/samples_per_class_500", None, "synth"),
+    ("multi_class_2_5_10/results_real/samples_per_class_500", None, "real"),
+    ("multi_class_2_5_10/results_synth_gaussian/samples_per_class_500", None, "synth"),
 ]
 
 # How to rename methods for the final tables
@@ -28,6 +28,7 @@ method_map = {
     "NegativeGradient": "NG",
     "NGFT_weighted": "NGFTW",
     "DELETE": "DELETE",
+    "SCAR": "SCAR",
 }
 
 
@@ -50,7 +51,7 @@ method_name_and_ref = {
 }
 
 
-original_path = os.path.join(parent_dir, "multi_class/results_real/samples_per_class_500/results_original_resnet18.csv")
+original_path = os.path.join(parent_dir, "multi_class_2_5_10/results_real/samples_per_class_500/results_original_resnet18.csv")
 
 original_df = pd.read_csv(original_path)
 
@@ -88,7 +89,7 @@ original_summary.columns = ['_'.join(col).strip() for col in original_summary.co
 
 original_summary = original_summary.reset_index()
 
-original_summary.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/multi_class/original_averaged_results_resnet18.csv", index=False)
+original_summary.to_csv("C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/multi_class_2_5_10/original_averaged_results_resnet18.csv", index=False)
 
 metrics = ['val_test_retain_acc', 'val_test_fgt_acc', 'val_full_retain_acc', 'val_full_fgt_acc', 'AUS']
 
@@ -103,7 +104,7 @@ df_original_grouped.columns = [' '.join(col).strip() if isinstance(col, tuple) e
 
 # Load the uploaded CSV files
 retrained_df = pd.read_csv(
-    f"{parent_dir}/multi_class/results_real/samples_per_class_500/retrained/cifar100_resnet18_unlearning_summary.csv"
+    f"{parent_dir}/multi_class_2_5_10/results_real/samples_per_class_500/retrained/cifar100_resnet18_unlearning_summary.csv"
 )
 
 retrained_df = retrained_df.rename(columns={"class_removed": "Forget Class"})
@@ -130,7 +131,7 @@ AUS = 1 - ((val_test_retain_acc_original - val_test_retain_acc_retrained)/100)
 retrained_df["AUS"] = AUS
 
 # Save the combined DataFrame
-output_path = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/multi_class/results_retrained_resnet18.csv"
+output_path = "C:/Users/AT56170/Desktop/Codes/Machine Unlearning - Classification/Source_Free_Class_Unlearning/multi_class_2_5_10/results_retrained_resnet18.csv"
 retrained_df.to_csv(output_path, index=False)
 
 
@@ -215,7 +216,8 @@ def make_multi_forget_table(stats_df: pd.DataFrame, out_path: str, dataset: str 
     Writes a LaTeX table with column groups for each num_forget in forget_list.
     First columns: Method, D_r-free, D_f-free.
     """
-    method_order = ["original", "retrained" ,"FT", "NG", "RL","BE", "DELETE", "NGFTW", "SCRUB"]  # Including "original"
+    method_order = ["original", "retrained" ,"FT", "NG", "RL", "DELETE", "NGFTW", "SCRUB", "SCAR"]  # Including "original"
+    #method_order = ["original", "retrained" ,"FT", "NG", "RL","BE", "DELETE", "NGFTW", "SCRUB", "SCAR"]  # Including "original"
 
     method_display = {m: method_name_and_ref.get(m, (m, "–"))[0] for m in method_order}
 
@@ -232,7 +234,7 @@ def make_multi_forget_table(stats_df: pd.DataFrame, out_path: str, dataset: str 
     total_metric_cols = len(forget_list) * n_cols_group
 
     lines = []
-    lines.append(r"\begin{table}[t]")
+    lines.append(r"\begin{table}[h]")
     lines.append(r"\centering")
     caption_text = (
         r"Multi-class unlearning performance for CIFAR-100 using ResNet-18 as the base architecture. "
@@ -441,7 +443,7 @@ def main():
                 all_data[i][col] = 0
 
     final_df = pd.concat(all_data, ignore_index=True)
-    out_merged = os.path.join(parent_dir, "multi_class/results_unlearning_resnet18.csv")
+    out_merged = os.path.join(parent_dir, "multi_class_2_5_10/results_unlearning_resnet18.csv")
     final_df.to_csv(out_merged, index=False)
     print("✅ All unlearning results merged:", out_merged)
 
@@ -470,7 +472,7 @@ def main():
     )
 
     out_best = os.path.join(
-        parent_dir, "multi_class/results_unlearning_best_per_model_by_aus_resnet18.csv"
+        parent_dir, "multi_class_2_5_10/results_unlearning_best_per_model_by_aus_resnet18.csv"
     )
     best_df.to_csv(out_best, index=False)
     print("✅ Best configs per model saved:", out_best)
@@ -479,7 +481,7 @@ def main():
     # 5) Save per-(dataset, method, source) CSVs (optional)
     # --------------------------------------------------------
     save_dir = os.path.join(
-        parent_dir, "multi_class/best_per_dataset_method_source_resnet18"
+        parent_dir, "multi_class_2_5_10/best_per_dataset_method_source_resnet18"
     )
     os.makedirs(save_dir, exist_ok=True)
 
@@ -508,7 +510,7 @@ def main():
     combined_df = pd.concat([original_df, retrained_df, best_df], ignore_index=True)
 
     out_total = os.path.join(
-        parent_dir, "multi_class/results_total_resnet18.csv"
+        parent_dir, "multi_class_2_5_10/results_total_resnet18.csv"
     )
     combined_df.to_csv(out_total, index=False)
     print("✅ Combined results saved:", out_total)
@@ -530,7 +532,7 @@ def main():
     # Flatten multi-level column names
     stats_df.columns = ['_'.join(col).strip('_') for col in stats_df.columns.values]
 
-    stats_path = os.path.join(parent_dir, "multi_class/results_mean_std_all_numeric_resnet18.csv")
+    stats_path = os.path.join(parent_dir, "multi_class_2_5_10/results_mean_std_all_numeric_resnet18.csv")
     stats_df.to_csv(stats_path, index=False)
 
     print("✅ Mean/std by dataset/method/model/source/num_forget saved:", stats_path)
@@ -540,7 +542,7 @@ def main():
     # --------------------------------------------------------
     table_out = os.path.join(
         parent_dir,
-        "multi_class/table_cifar100_resnet18_multiclass.tex",
+        "multi_class_2_5_10/table_cifar100_resnet18_multiclass_2_5_10.tex",
     )
     make_multi_forget_table(
         stats_df,
