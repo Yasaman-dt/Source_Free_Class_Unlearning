@@ -141,7 +141,7 @@ Runs FC-only unlearning using embeddings computed from real data.
 **multi classes unlearning:**
 ```bash
 # CIFAR-100, ResNet-18, 500 samples/class, 1 model, 200 epochs on GPU 0, number of forget classes=10
-./job_multiclass_real_cifar10.sh FT 0.01 1 500 0 200 resnet18 10
+./job_multiclass_real_cifar100.sh FT 0.01 1 500 0 200 resnet18 10
 ```
 
 ---
