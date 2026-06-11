@@ -14,7 +14,7 @@ source ~/.bashrc
 conda activate /projets/Zdehghani/torch_env
 cd /projets/Zdehghani/Source_Free_Class_Unlearning
 CUDA_VISIBLE_DEVICES=$gpu \
-python -m main_files.main_part  \
+python -m main_files.main_synth_part  \
     --dataset $DATASET \
     --mode CR \
     --cuda 0 \
