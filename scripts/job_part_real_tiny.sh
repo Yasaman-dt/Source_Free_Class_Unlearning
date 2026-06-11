@@ -13,9 +13,9 @@ SCREEN_NAME="REAL_PART_${RUN_MODEL}_${METHOD}_${N_MODEL}_${lr}_${epoch}_${SAMPLE
 screen -S $SCREEN_NAME -dm bash -c "
 source ~/.bashrc
 conda activate /projets/Zdehghani/torch_env
-cd /projets/Zdehghani/MSource_Free_Class_Unlearning
+cd /projets/Zdehghani/Source_Free_Class_Unlearning
 CUDA_VISIBLE_DEVICES=$gpu \
-python main_real_part.py  \
+python -m main_files.main_real_part  \
     --run_name $RUN_MODEL \
     --dataset $DATASET \
     --mode CR \

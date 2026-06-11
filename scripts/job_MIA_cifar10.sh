@@ -11,7 +11,7 @@ SCREEN_NAME="${DATASET}_${METHOD}_${N_MODEL}_${SOURCE}"
 screen -S $SCREEN_NAME -dm bash -c "
 source ~/.bashrc
 conda activate /projets/Zdehghani/torch_env
-cd /projets/Zdehghani/Source_Free_Class_Unlearning
+cd /projets/Zdehghani/Source_Free_Class_Unlearning/MIA_code
 CUDA_VISIBLE_DEVICES=$GPU \
 python checking_MIA.py \
     --method $METHOD \
