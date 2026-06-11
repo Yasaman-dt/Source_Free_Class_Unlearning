@@ -217,6 +217,23 @@ CUDA_VISIBLE_DEVICES=0 python create_embeddings.py
 ./scripts/job_part_real_cifar10.sh DELETE 0.01 1 5000 0 200 resnet18
 ```
 
+## License
 
+If you find this work useful in your research, please consider citing our paper :)
 
+@article{
+dehghani2026a,
+title={A Universal Source-Free Class Unlearning Framework via Synthetic Embeddings},
+author={Zahra Dehghani Tafti and Pablo Piantanida and Mohammadhadi Shateri},
+journal={Transactions on Machine Learning Research},
+issn={2835-8856},
+year={2026},
+url={https://openreview.net/forum?id=Fb2sZ1eoVe},
+note={}
+}
 
+@article{taftiuniversal,
+  title={A Universal Source-Free Class Unlearning Framework via Synthetic Embeddings},
+  author={Tafti, Zahra Dehghani and Piantanida, Pablo and Shateri, Mohammadhadi},
+  journal={Transactions on Machine Learning Research}
+}
