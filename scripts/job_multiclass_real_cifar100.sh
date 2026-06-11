@@ -1,4 +1,3 @@
-RUN_MODEL="cifar100_CR"
 DATASET="cifar100"
 METHOD=$1
 lr=$2
@@ -9,7 +8,7 @@ epoch=$6
 MODEL=$7
 N_class=$8
 
-SCREEN_NAME="real_${RUN_MODEL}_${METHOD}_${N_MODEL}_${lr}_${epoch}_${SAMPLE_PER_CLASS}_${MODEL}.sh"
+SCREEN_NAME="real_${DATASET}_${METHOD}_${N_MODEL}_${lr}_${epoch}_${SAMPLE_PER_CLASS}_${MODEL}.sh"
 
 screen -S $SCREEN_NAME -dm bash -c "
 source ~/.bashrc
@@ -17,7 +16,6 @@ conda activate /projets/Zdehghani/torch_env
 cd /projets/Zdehghani/Source_Free_Class_Unlearning
 CUDA_VISIBLE_DEVICES=$gpu \
 python -m main_files.main_real  \
-    --run_name $RUN_MODEL \
     --dataset $DATASET \
     --mode CR \
     --cuda 0 \
