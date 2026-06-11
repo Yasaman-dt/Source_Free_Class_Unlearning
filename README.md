@@ -233,9 +233,4 @@ url={https://openreview.net/forum?id=Fb2sZ1eoVe},
 note={}
 }
 
-@article{taftiuniversal,
-  title={A Universal Source-Free Class Unlearning Framework via Synthetic Embeddings},
-  author={Tafti, Zahra Dehghani and Piantanida, Pablo and Shateri, Mohammadhadi},
-  journal={Transactions on Machine Learning Research}
-}
 ```
