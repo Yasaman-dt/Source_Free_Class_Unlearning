@@ -55,10 +55,6 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original \
   --n_model 1
 ```
 
-**Flags**
-- `--model {resnet18|resnet50|ViT|swint}`
-- `--dataset {cifar10|cifar100|TinyImageNet}`
-
 ---
 
 ## 2) Evaluate originals → CSV
@@ -104,7 +100,7 @@ CUDA_VISIBLE_DEVICES=2 python -m model_preparation.training_oracle \
 
 ---
 
-## 4) Extract real embeddings
+## 4) Extract Real Embeddings
 
 Computes/stores real feature embeddings used by several unlearning settings 
 
