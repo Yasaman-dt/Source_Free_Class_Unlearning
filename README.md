@@ -206,7 +206,7 @@ CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
 # FC-only unlearning (real embeddings) with DELETE on ResNet-18
 ./scripts/job_singleclass_real.sh cifar10 DELETE 0.01 1 5000 0 100 resnet18
 
-# FC-only unlearning (synthetic embeddings) with DELETE on ResNet-18 + Gaussian
+# FC-only unlearning (synthetic embeddings) with DELETE on ResNet-18
 ./scripts/job_singleclass_synth.sh cifar10 DELETE 0.01 1 5000 0 200 resnet18 gaussian
 
 # Partial-layer unlearning (synthetic embeddings) with DELETE on ResNet-18
