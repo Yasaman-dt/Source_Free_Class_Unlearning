@@ -180,7 +180,7 @@ Uses synthetic embeddings (e.g., Gaussian) for FC-only unlearning.
 ```
 
 
-### D) Partial-layer unlearning (**before the last conv for resnet18**) with **synthetic** embeddings
+### D) Partial-layer unlearning (**before the last conv for resnet18**) with **synthetic** embeddings (our framework)
 
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
