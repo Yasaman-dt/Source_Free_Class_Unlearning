@@ -152,7 +152,7 @@ Runs FC-only unlearning using embeddings computed from real data.
 ```
 
 
-### B) FC-only unlearning with **synthetic** samples (our framework)
+### B) FC-only unlearning with **synthetic** embeddings (our framework)
 
 Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 
@@ -180,7 +180,7 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 ```
 
 
-### D) Partial-layer unlearning (**before the last conv for resnet18**) with **synthetic** samples
+### D) Partial-layer unlearning (**before the last conv for resnet18**) with **synthetic** embeddings
 
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
