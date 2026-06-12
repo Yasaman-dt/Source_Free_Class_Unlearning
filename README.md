@@ -154,20 +154,20 @@ Runs FC-only unlearning using embeddings computed from real data.
 
 ### B) FC-only unlearning with **synthetic** embeddings (our framework)
 
-Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
+Uses synthetic embeddings (e.g., Gaussian) for FC-only unlearning.
 
 **single class unlearning:**
 
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
-# CIFAR-100, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0 with Gaussian synthetic emebddings
+# CIFAR-100, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0 with Gaussian synthetic embeddings
 ./job_singleclass_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18 gaussian
 ```
 **multi class unlearning:**
 
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model num_forget_classes`
 ```bash
-# CIFAR-100, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0 with Gaussian synthetic emebddings
+# CIFAR-100, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0 with Gaussian synthetic embeddings
 ./job_multiclass_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18 gaussian 10
 ```
 
