@@ -40,7 +40,7 @@ pip install -r requirements.txt
 
 ---
 
-## 1) Train “Original” models
+## 1) Train Original Models
 
 Trains N independently initialized models on the chosen dataset/backbone.
 
@@ -57,7 +57,7 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original \
 
 ---
 
-## 2) Evaluate originals → CSV
+## 2) Evaluate original Models
 
 Produces a CSV with baseline metrics for later comparison.
 
@@ -169,7 +169,7 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 
 ---
 
-### C) Partial-layer unlearning (**before the last conv**) with **real** embeddings
+### C) Partial-layer unlearning (**before the last conv for resnet18**) with **real** embeddings
 
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
@@ -178,7 +178,7 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 
 ---
 
-### D) Partial-layer unlearning (**before the last conv**) with **synthetic** samples
+### D) Partial-layer unlearning (**before the last conv for resnet18**) with **synthetic** samples
 
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
@@ -193,7 +193,7 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 # Train original ResNet-18 models on CIFAR-10
 CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original --model resnet18 --dataset cifar10 --run_original --n_model 1
 
-# Evaluate originals → CSV
+# Evaluate original Models → CSV
 CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_singleclass
 
 # Train Oracle on CIFAR-10
