@@ -47,7 +47,7 @@ Trains N independently initialized models on the chosen dataset/backbone.
 ```bash
 cd Source_Free_Class_Unlearning/
 
-# Example: 1 original ResNet-18 on CIFAR-10
+# Example: 1 original ResNet-18 model on CIFAR-10
 CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original \
   --model resnet18 \
   --dataset cifar10 \
@@ -136,12 +136,14 @@ Runs FC-only unlearning using embeddings computed from real data.
 
 
 **single class unlearning:**
+
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
 # CIFAR-100, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0
 ./job_singleclass_real.sh cifar100 FT 0.01 1 5000 0 200 resnet18
 ```
 **multi class unlearning:**
+
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model num_forget_classes`
 ```bash
 # CIFAR-100, ResNet-18, 500 samples/class, 1 model, 200 epochs on GPU 0, number of forget classes=10
@@ -155,12 +157,14 @@ Runs FC-only unlearning using embeddings computed from real data.
 Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 
 **single class unlearning:**
+
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
 # Gaussian synthetic emebddings
 ./job_singleclass_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18 gaussian
 ```
 **multi class unlearning:**
+
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model num_forget_classes`
 ```bash
 # Gaussian synthetic emebddings
