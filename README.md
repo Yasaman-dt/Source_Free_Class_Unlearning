@@ -116,6 +116,7 @@ CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
 Make the job scripts executable once:
 
 **single class unlearning:**
+
 In **single-class unlearning**, each experiment forgets only one class at a time. For a given dataset, the scripts iterate through all classes separately. For example, on CIFAR-100, the script performs 100 separate runs, forgetting class `0`, class `1`, ..., up to class `99`.
 ```bash
 cd scripts
@@ -124,6 +125,7 @@ chmod +x job_singleclass_real.sh job_singleclass_synth.sh job_singleclass_real_p
 
 
 **multi class unlearning:**
+
 In **multi-class unlearning**, multiple classes are forgotten in a single run. The number of forget classes is specified in the script, while the candidate forget classes are defined in `opts.py`. The script selects the requested number of classes from this predefined list and runs one unlearning experiment for that setting.
 ```bash
 cd scripts
