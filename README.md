@@ -6,9 +6,9 @@ This repository provides the official implementation of the paper [A Universal S
 
 A source-free framework for **class unlearning** in image classification with options for
 - **FC-only** unlearning using *real* or *synthetic* embeddings,
-- **partial-layer** unlearning (before the last conv),
+- **partial-layer** unlearning (before the last conv layer for resnet18),
 - multiple unlearning **methods** and **backbones**,
-- reproducible baselines (**Original**) and the **Oracle** (retrain-from-scratch) upper bound.
+- reproducible **Original** and the **Oracle** (retrain-from-scratch) upper bound.
 
 ---
 
@@ -104,9 +104,9 @@ CUDA_VISIBLE_DEVICES=2 python -m model_preparation.training_oracle \
 
 ---
 
-## 4) Create dataset embeddings
+## 4) Extract real embeddings
 
-Computes/stores feature embeddings used by several unlearning settings 
+Computes/stores real feature embeddings used by several unlearning settings 
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
@@ -133,14 +133,16 @@ chmod +x job_multiclass_real.sh job_multiclass_synth.sh
 
 Runs FC-only unlearning using embeddings computed from real data.
 
-**Args:** `METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL`
+
 
 **single class unlearning:**
+**Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
 # CIFAR-100, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0
 ./job_singleclass_real.sh cifar100 FT 0.01 1 5000 0 200 resnet18
 ```
 **multi class unlearning:**
+**Args:** `dataset method lr n_model samples_per_class gpu epoch model num_forget_classes`
 ```bash
 # CIFAR-100, ResNet-18, 500 samples/class, 1 model, 200 epochs on GPU 0, number of forget classes=10
 ./job_multiclass_real.sh cifar100 FT 0.01 1 500 0 200 resnet18 10
@@ -152,16 +154,16 @@ Runs FC-only unlearning using embeddings computed from real data.
 
 Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 
-**Args:** `DATASET METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL NOISE`
-
 **single class unlearning:**
+**Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
-# Gaussian synthetic samples
+# Gaussian synthetic emebddings
 ./job_singleclass_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18 gaussian
 ```
 **multi class unlearning:**
+**Args:** `dataset method lr n_model samples_per_class gpu epoch model num_forget_classes`
 ```bash
-# Gaussian synthetic samples
+# Gaussian synthetic emebddings
 ./job_multiclass_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18 gaussian 10
 ```
 
@@ -169,8 +171,7 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 
 ### C) Partial-layer unlearning (**before the last conv**) with **real** embeddings
 
-**Args:** `DATASET METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL`
-
+**Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
 ./job_singleclass_real_part.sh cifar100 FT 0.01 1 5000 0 200 resnet18
 ```
@@ -179,8 +180,7 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 
 ### D) Partial-layer unlearning (**before the last conv**) with **synthetic** samples
 
-**Args:** `DATASET METHOD LR N_MODEL SAMPLES_PER_CLASS GPU EPOCHS MODEL`
-
+**Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
 ./job_singleclass_synth_part.sh cifar100 FT 0.01 1 5000 0 200 resnet18
 ```
@@ -199,7 +199,7 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.test_originalmodel_singleclas
 # Train Oracle on CIFAR-10
 CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle --model resnet18 --dataset cifar10 --mode CR --run_rt_model
 
-# Create embeddings
+# Extract real embeddings
 CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
 
 # FC-only unlearning (real embeddings) with DELETE on ResNet-18
