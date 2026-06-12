@@ -5,8 +5,8 @@ from tools.utils import accuracy, set_seed, get_retrained_model, get_trained_mod
 from MIA_code.MIA import get_MIA_SVC
 from tools.opts import OPT as opt
 import time
-from methods.Unlearning_methods import choose_method
-from methods.Unlearning_methods import calculate_accuracy
+from methods.Unlearning_methods_synth import choose_method
+from methods.Unlearning_methods_synth import calculate_accuracy
 from error_propagation import Complex
 import os
 import torch
