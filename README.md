@@ -57,7 +57,7 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_original \
 
 ---
 
-## 2) Evaluate original Models
+## 2) Evaluate Original Models
 
 Produces a CSV with baseline metrics for later comparison.
 
