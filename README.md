@@ -136,8 +136,6 @@ In **multi-class unlearning**, multiple classes are forgotten in a single run. T
 
 Runs FC-only unlearning using embeddings computed from real data.
 
-
-
 **single class unlearning:**
 
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model`
@@ -153,7 +151,6 @@ Runs FC-only unlearning using embeddings computed from real data.
 ./job_multiclass_real.sh cifar100 FT 0.01 1 500 0 200 resnet18 10
 ```
 
----
 
 ### B) FC-only unlearning with **synthetic** samples (our framework)
 
@@ -174,7 +171,6 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 ./job_multiclass_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18 gaussian 10
 ```
 
----
 
 ### C) Partial-layer unlearning (**before the last conv for resnet18**) with **real** embeddings
 
@@ -183,7 +179,6 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 ./job_singleclass_real_part.sh cifar100 FT 0.01 1 5000 0 200 resnet18
 ```
 
----
 
 ### D) Partial-layer unlearning (**before the last conv for resnet18**) with **synthetic** samples
 
@@ -221,6 +216,8 @@ CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
 # Partial-layer unlearning (real embeddings) with DELETE on ResNet-18
 ./scripts/job_singleclass_real_part.sh cifar10 DELETE 0.01 1 5000 0 200 resnet18
 ```
+
+---
 
 ## Citation
 
