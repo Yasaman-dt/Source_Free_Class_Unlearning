@@ -86,6 +86,7 @@ CUDA_VISIBLE_DEVICES=0 python -m model_preparation.training_oracle \
 ```
 
 **multi class unlearning:**
+
 ```bash
 CUDA_VISIBLE_DEVICES=2 python -m model_preparation.training_oracle \
   --model resnet18 \
@@ -102,7 +103,7 @@ CUDA_VISIBLE_DEVICES=2 python -m model_preparation.training_oracle \
 
 ## 4) Extract Real Embeddings
 
-Computes/stores real feature embeddings used by several unlearning settings 
+Computes and stores real feature embeddings:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python -m embedding_extraction.create_embeddings
