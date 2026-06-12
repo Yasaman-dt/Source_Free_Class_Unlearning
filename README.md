@@ -120,11 +120,17 @@ Make the job scripts executable once:
 cd scripts
 chmod +x job_singleclass_real.sh job_singleclass_synth.sh job_singleclass_real_part.sh job_singleclass_synth_part.sh
 ```
+In **single-class unlearning**, each experiment forgets only one class at a time. For a given dataset, the scripts iterate through all classes separately. For example, on CIFAR-100, the script performs 100 separate runs, forgetting class `0`, class `1`, ..., up to class `99`.
+
+
 **multi class unlearning:**
 ```bash
 cd scripts
 chmod +x job_multiclass_real.sh job_multiclass_synth.sh
 ```
+In **multi-class unlearning**, multiple classes are forgotten in a single run. The number of forget classes is specified in the script, while the candidate forget classes are defined in `opts.py`. The script selects the requested number of classes from this predefined list and runs one unlearning experiment for that setting.
+
+
 
 ### A) FC-only unlearning with **real** embeddings
 
@@ -157,14 +163,14 @@ Uses synthetic embeddings/samples (e.g., Gaussian) for FC-only unlearning.
 
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model`
 ```bash
-# Gaussian synthetic emebddings
+# CIFAR-100, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0 with Gaussian synthetic emebddings
 ./job_singleclass_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18 gaussian
 ```
 **multi class unlearning:**
 
 **Args:** `dataset method lr n_model samples_per_class gpu epoch model num_forget_classes`
 ```bash
-# Gaussian synthetic emebddings
+# CIFAR-100, ResNet-18, 5000 samples/class, 1 model, 200 epochs on GPU 0 with Gaussian synthetic emebddings
 ./job_multiclass_synth.sh cifar100 FT 0.01 1 5000 0 200 resnet18 gaussian 10
 ```
 
