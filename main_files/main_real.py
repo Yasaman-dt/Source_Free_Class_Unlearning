@@ -184,6 +184,8 @@ def main(train_retain_loader_real, train_fgt_loader_real, test_retain_loader, te
                                                 retainfull_loader_real=retainfull_loader_real,
                                                 forgetfull_loader_real=forgetfull_loader_real,
                                                 class_to_remove=class_to_remove) #real samples
+            approach.test_retain_loader = test_retain_loader
+            approach.test_fgt_loader = test_fgt_loader
 
         if opt.load_unlearned_model:
             print("LOADING UNLEARNED MODEL")

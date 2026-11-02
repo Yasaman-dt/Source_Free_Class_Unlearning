@@ -292,6 +292,8 @@ def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_f
                                                 retainfull_loader_real=retainfull_loader_real,
                                                 forgetfull_loader_real=forgetfull_loader_real,
                                                 class_to_remove=class_to_remove)  #generated samples
+            approach.test_retain_loader = test_retain_loader
+            approach.test_fgt_loader = test_fgt_loader
             #approach = choose_method(opt.method)(pretr_model, train_retain_loader_real, train_fgt_loader_real, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=class_to_remove) #real samples
 
         if opt.load_unlearned_model:

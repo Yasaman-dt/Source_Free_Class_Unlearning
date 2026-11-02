@@ -147,7 +147,8 @@ def log_epoch_to_csv(epoch, epoch_times, train_retain_acc, train_fgt_acc,
                      val_retain_acc, val_fgt_acc,
                      full_retain_acc, full_fgt_acc, AUS,
                      mode, dataset, model, class_to_remove, seed,
-                     retain_count, forget_count, total_count):
+                     retain_count, forget_count, total_count,
+                     test_retain_acc=None, test_fgt_acc=None):
 
     os.makedirs(
         f'results_real/samples_per_class_{opt.samples_per_class}/{mode}/epoch_logs_m{n_model}_lr{opt.lr_unlearn}',
@@ -172,14 +173,14 @@ def log_epoch_to_csv(epoch, epoch_times, train_retain_acc, train_fgt_acc,
                 'train_retain_acc', 'train_fgt_acc',
                 'val_retain_acc', 'val_fgt_acc',
                 'full_retain_acc', 'full_fgt_acc',
-                'AUS', 'retain_count', 'forget_count', 'total_count'
+                'AUS', 'retain_count', 'forget_count', 'total_count', 'test_retain_acc', 'test_fgt_acc'
             ])
         writer.writerow([
             epoch, epoch_times, mode, forget_tag, seed,
             train_retain_acc, train_fgt_acc,
             val_retain_acc, val_fgt_acc,
             full_retain_acc, full_fgt_acc,
-            AUS, retain_count, forget_count, total_count
+            AUS, retain_count, forget_count, total_count, test_retain_acc, test_fgt_acc
         ])
         
         
@@ -290,6 +291,9 @@ class BaseMethod:
                 acc_train_fgt = calculate_accuracy(self.net, self.train_fgt_loader, use_fc_only=True)
                 acc_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
                 acc_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+                test_retain_acc = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+                test_fgt_acc = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
+                print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
                 full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
                 full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
                 self.net.train()
@@ -398,7 +402,10 @@ class BaseMethod:
                     seed=opt.seed,
                     retain_count=retain_count,
                     forget_count=forget_count,
-                    total_count=total_count)
+                    total_count=total_count,
+                        test_retain_acc=round(test_retain_acc, 4),
+                        test_fgt_acc=round(test_fgt_acc, 4)
+                    )
             self.scheduler.step()
 
         log_summary_across_classes(
@@ -540,6 +547,9 @@ class NGFT(BaseMethod):
                 acc_train_fgt = calculate_accuracy(self.net, self.train_fgt_loader, use_fc_only=True)
                 acc_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
                 acc_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+                test_retain_acc = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+                test_fgt_acc = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
+                print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
                 full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
                 full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
 
@@ -641,7 +651,10 @@ class NGFT(BaseMethod):
                     seed=opt.seed,
                     retain_count=retain_count,
                     forget_count=forget_count,
-                    total_count=total_count)
+                    total_count=total_count,
+                        test_retain_acc=round(test_retain_acc, 4),
+                        test_fgt_acc=round(test_fgt_acc, 4)
+                    )
             self.scheduler.step()
 
         log_summary_across_classes(
@@ -726,6 +739,9 @@ class NGFT_weighted(BaseMethod):
                 acc_train_fgt = calculate_accuracy(self.net, self.train_fgt_loader, use_fc_only=True)
                 acc_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
                 acc_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+                test_retain_acc = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+                test_fgt_acc = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
+                print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
                 full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
                 full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
 
@@ -810,7 +826,10 @@ class NGFT_weighted(BaseMethod):
                     seed=opt.seed,
                     retain_count=retain_count,
                     forget_count=forget_count,
-                    total_count=total_count)
+                    total_count=total_count,
+                        test_retain_acc=round(test_retain_acc, 4),
+                        test_fgt_acc=round(test_fgt_acc, 4)
+                    )
 
 
             self.scheduler.step()
@@ -1106,8 +1125,9 @@ class SCAR(BaseMethod):
 
             val_retain_acc = evaluate_embedding_accuracy(self.net.fc, self.val_retain_loader, opt.device)
             val_fgt_acc = evaluate_embedding_accuracy(self.net.fc, self.val_fgt_loader, opt.device)
-            
-
+            test_retain_acc = evaluate_embedding_accuracy(self.net.fc, self.test_retain_loader, opt.device)
+            test_fgt_acc = evaluate_embedding_accuracy(self.net.fc, self.test_fgt_loader, opt.device)
+            print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
             AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
             # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
@@ -1209,7 +1229,10 @@ class SCAR(BaseMethod):
                 seed=opt.seed,
                 retain_count=retain_count,
                 forget_count=forget_count,
-                total_count=total_count)
+                total_count=total_count,
+                    test_retain_acc=round(test_retain_acc, 4),
+                    test_fgt_acc=round(test_fgt_acc, 4)
+                )
                 
         log_summary_across_classes(
             best_epoch=round(best_results["Epoch"],4),
@@ -1307,8 +1330,9 @@ class BoundaryShrink(BaseMethod):
 
             val_retain_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.val_retain_loader, opt.device)
             val_fgt_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.val_fgt_loader, opt.device)
-            
-
+            test_retain_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.test_retain_loader, opt.device)
+            test_fgt_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.test_fgt_loader, opt.device)
+            print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
             AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
             # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
@@ -1417,7 +1441,10 @@ class BoundaryShrink(BaseMethod):
                 seed=opt.seed,
                 retain_count=retain_count,
                 forget_count=forget_count,
-                total_count=total_count)
+                total_count=total_count,
+                    test_retain_acc=round(test_retain_acc, 4),
+                    test_fgt_acc=round(test_fgt_acc, 4)
+                )
                 
         log_summary_across_classes(
             best_epoch=round(best_results["Epoch"],4),
@@ -1534,8 +1561,9 @@ class BoundaryExpanding(BaseMethod):
 
             val_retain_acc = evaluate_embedding_accuracy(widen_model, self.val_retain_loader, opt.device)
             val_fgt_acc = evaluate_embedding_accuracy(widen_model, self.val_fgt_loader, opt.device)
-            
-
+            test_retain_acc = evaluate_embedding_accuracy(widen_model, self.test_retain_loader, opt.device)
+            test_fgt_acc = evaluate_embedding_accuracy(widen_model, self.test_fgt_loader, opt.device)
+            print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
             AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
             # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
@@ -1660,7 +1688,10 @@ class BoundaryExpanding(BaseMethod):
                 seed=opt.seed,
                 retain_count=retain_count,
                 forget_count=forget_count,
-                total_count=total_count)
+                total_count=total_count,
+                    test_retain_acc=round(test_retain_acc, 4),
+                    test_fgt_acc=round(test_fgt_acc, 4)
+                )
                 
         log_summary_across_classes(
             best_epoch=round(best_results["Epoch"],4),
@@ -1865,8 +1896,9 @@ class SCRUB(BaseMethod):
 
             val_retain_acc = evaluate_embedding_accuracy(student_fc, val_retain_loader, opt.device)
             val_fgt_acc = evaluate_embedding_accuracy(student_fc, val_fgt_loader, opt.device)
-            
-
+            test_retain_acc = evaluate_embedding_accuracy(student_fc, self.test_retain_loader, opt.device)
+            test_fgt_acc = evaluate_embedding_accuracy(student_fc, self.test_fgt_loader, opt.device)
+            print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
             AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
             # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
@@ -1981,7 +2013,10 @@ class SCRUB(BaseMethod):
                 seed=opt.seed,
                 retain_count=retain_count,
                 forget_count=forget_count,
-                total_count=total_count)
+                total_count=total_count,
+                    test_retain_acc=round(test_retain_acc, 4),
+                    test_fgt_acc=round(test_fgt_acc, 4)
+                )
                 
         log_summary_across_classes(
             best_epoch=round(best_results["Epoch"],4),
@@ -2139,6 +2174,9 @@ class DUCK(BaseMethod):
                 acc_train_fgt = calculate_accuracy(self.net, self.train_fgt_loader, use_fc_only=True)
                 acc_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
                 acc_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+                test_retain_acc = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+                test_fgt_acc = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
+                print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
                 full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
                 full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
 
@@ -2228,7 +2266,10 @@ class DUCK(BaseMethod):
                     seed=opt.seed,
                     retain_count=retain_count,
                     forget_count=forget_count,
-                    total_count=total_count)
+                    total_count=total_count,
+                        test_retain_acc=round(test_retain_acc, 4),
+                        test_fgt_acc=round(test_fgt_acc, 4)
+                    )
 
             init = False
             scheduler.step()
@@ -2378,8 +2419,9 @@ class RetrainedEmbedding(BaseMethod):
 
             val_retain_acc = evaluate_embedding_accuracy(self.fc_layer, self.val_retain_loader, opt.device)
             val_fgt_acc = evaluate_embedding_accuracy(self.fc_layer, self.val_fgt_loader, opt.device)
-            
-
+            test_retain_acc = evaluate_embedding_accuracy(self.fc_layer, self.test_retain_loader, opt.device)
+            test_fgt_acc = evaluate_embedding_accuracy(self.fc_layer, self.test_fgt_loader, opt.device)
+            print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
             AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
             # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
@@ -2480,7 +2522,10 @@ class RetrainedEmbedding(BaseMethod):
                 seed=opt.seed,
                 retain_count=retain_count,
                 forget_count=forget_count,
-                total_count=total_count)
+                total_count=total_count,
+                    test_retain_acc=round(test_retain_acc, 4),
+                    test_fgt_acc=round(test_fgt_acc, 4)
+                )
     
         log_summary_across_classes(
             best_epoch=round(best_results["Epoch"],4),
@@ -2598,8 +2643,9 @@ class MaximeMethod(BaseMethod):
 
         val_retain_acc = evaluate_embedding_accuracy(widen_model, self.val_retain_loader, opt.device)
         val_fgt_acc = evaluate_embedding_accuracy(widen_model, self.val_fgt_loader, opt.device)
-        
-
+        test_retain_acc = evaluate_embedding_accuracy(widen_model, self.test_retain_loader, opt.device)
+        test_fgt_acc = evaluate_embedding_accuracy(widen_model, self.test_fgt_loader, opt.device)
+        print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
         AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
         # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
@@ -2611,6 +2657,28 @@ class MaximeMethod(BaseMethod):
             f"Val Retain Acc: {val_retain_acc:.2f}% | Val Forget Acc: {val_fgt_acc:.2f}% | "
             f"AUS: {AUS:.2f}"
             )
+
+        log_epoch_to_csv(
+            epoch=epoch,
+            epoch_times=duration,
+            train_retain_acc=round(retain_accuracy, 4),
+            train_fgt_acc=round(forget_accuracy, 4),
+            val_retain_acc=round(val_retain_acc, 4),
+            val_fgt_acc=round(val_fgt_acc, 4),
+            full_retain_acc=round(full_retain_acc, 4),
+            full_fgt_acc=round(full_fgt_acc, 4),
+            AUS=round(AUS, 4),
+            mode=opt.method,
+            dataset=opt.dataset,
+            model=opt.model,
+            class_to_remove=self.class_to_remove,
+            seed=opt.seed,
+            retain_count=retain_count,
+            forget_count=forget_count,
+            total_count=total_count,
+            test_retain_acc=round(test_retain_acc, 4),
+            test_fgt_acc=round(test_fgt_acc, 4),
+        )
 
                 
         log_summary_across_classes(
@@ -2731,6 +2799,9 @@ class BadTeacher(BaseMethod):
                 acc_train_fgt = calculate_accuracy(self.net, self.train_fgt_loader, use_fc_only=True)
                 acc_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
                 acc_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+                test_retain_acc = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+                test_fgt_acc = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
+                print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
                 full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
                 full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
 
@@ -2786,7 +2857,10 @@ class BadTeacher(BaseMethod):
                                  opt.seed,
                                  retain_count,
                                  forget_count,
-                                 total_count)
+                                 total_count,
+                                     round(test_retain_acc, 4),
+                                     round(test_fgt_acc, 4)
+                                 )
 
             scheduler.step()
 
@@ -2877,6 +2951,9 @@ class Delete(BaseMethod):
             init_train_fgt    = calculate_accuracy(self.net, self.train_fgt_loader,   use_fc_only=True)
             init_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
             init_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader,    use_fc_only=True)
+            test_retain_acc = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+            test_fgt_acc = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
+            print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
             init_full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
             init_full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
             self.net.train()
@@ -2915,6 +2992,9 @@ class Delete(BaseMethod):
                 acc_train_fgt     = calculate_accuracy(self.net, self.train_fgt_loader,   use_fc_only=True)
                 acc_val_ret  = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
                 acc_val_fgt  = calculate_accuracy(self.net, self.val_fgt_loader,    use_fc_only=True)
+                test_retain_acc = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+                test_fgt_acc = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
+                print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
                 full_retain_acc  = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
                 full_fgt_acc  = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
                 self.net.train()
@@ -2992,6 +3072,9 @@ class Delete(BaseMethod):
                     retain_count=retain_count,
                     forget_count=forget_count,
                     total_count=total_count
+                ,
+                    test_retain_acc=round(test_retain_acc, 4),
+                    test_fgt_acc=round(test_fgt_acc, 4)
                 )
 
             self.scheduler.step()

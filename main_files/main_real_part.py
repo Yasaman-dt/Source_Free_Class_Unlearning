@@ -147,6 +147,10 @@ def main(train_retain_loader_img,
                                                     retainfull_loader_real=retainfull_loader_real,
                                                     forgetfull_loader_real=forgetfull_loader_real,
                                                     class_to_remove=class_to_remove)  #generated samples
+            approach.test_retain_loader_img = test_retain_loader_img
+            approach.test_fgt_loader_img = test_fgt_loader_img
+            approach.test_retain_loader = test_retain_loader
+            approach.test_fgt_loader = test_fgt_loader
 
 
         if opt.load_unlearned_model:

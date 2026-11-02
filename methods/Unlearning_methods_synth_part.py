@@ -21,6 +21,18 @@ from generate_part_samples_randomly_resnet18 import TruncatedResNet, RemainingRe
 
 
 n_model = opt.n_model
+
+def get_forget_tag(class_to_remove):
+    if class_to_remove is None:
+        return "all"
+    if isinstance(class_to_remove, list):
+        if len(class_to_remove) > 10:
+            return f"multi_{len(class_to_remove)}_classes"
+        if len(class_to_remove) == 1:
+            return str(class_to_remove[0])
+        return "_".join(map(str, class_to_remove))
+    return str(class_to_remove)
+
  
     
 def AUS(a_t, a_or, a_f):
@@ -76,7 +88,7 @@ def evaluate_embedding_accuracy(model, dataloader, device):
     return 100 * correct / total if total > 0 else 0
 
 
-def log_epoch_to_csv(epoch, epoch_times,train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, mode, dataset, model, class_to_remove, seed, retain_count, forget_count,total_count):
+def log_epoch_to_csv(epoch, epoch_times,train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, mode, dataset, model, class_to_remove, seed, retain_count, forget_count,total_count, test_retain_acc=None, test_fgt_acc=None):
     os.makedirs(f'results_synth/samples_per_class_{opt.samples_per_class}/{mode}/epoch_logs_m{n_model}_lr{opt.lr_unlearn}', exist_ok=True)
 
     if isinstance(class_to_remove, list):
@@ -90,8 +102,8 @@ def log_epoch_to_csv(epoch, epoch_times,train_retain_acc, train_fgt_acc, val_ret
     with open(csv_path, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
         if not file_exists:
-            writer.writerow(['epoch', 'epoch_times', 'mode', 'Forget Class', 'seed', 'train_retain_acc', 'train_fgt_acc', 'val_retain_acc', 'val_fgt_acc', 'full_retain_acc', 'full_fgt_acc', 'AUS', 'retain_count', 'forget_count','total_count'])
-        writer.writerow([epoch, epoch_times, mode, class_name, seed, train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, retain_count, forget_count,total_count])
+            writer.writerow(['epoch', 'epoch_times', 'mode', 'Forget Class', 'seed', 'train_retain_acc', 'train_fgt_acc', 'val_retain_acc', 'val_fgt_acc', 'full_retain_acc', 'full_fgt_acc', 'AUS', 'retain_count', 'forget_count','total_count', 'test_retain_acc', 'test_fgt_acc'])
+        writer.writerow([epoch, epoch_times, mode, class_name, seed, train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, retain_count, forget_count,total_count, test_retain_acc, test_fgt_acc])
 
 def log_summary_across_classes(best_epoch, train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, mode, dataset, model, class_to_remove, seed, retain_count, forget_count,total_count, unlearning_time_until_best):
     os.makedirs('results_synth', exist_ok=True)
@@ -235,6 +247,9 @@ class BaseMethod:
                 acc_train_fgt = evaluate_embedding_accuracy(self.Remainingmodel, self.train_fgt_loader, opt.device)/100
                 acc_val_ret = evaluate_embedding_accuracy(merged_model, self.val_retain_loader_img, opt.device)/100
                 acc_val_fgt = evaluate_embedding_accuracy(merged_model, self.val_fgt_loader_img, opt.device)/100
+                test_retain_acc = evaluate_embedding_accuracy(merged_model, self.test_retain_loader_img, opt.device) / 100.0
+                test_fgt_acc = evaluate_embedding_accuracy(merged_model, self.test_fgt_loader_img, opt.device) / 100.0
+                print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
                 full_retain_acc = evaluate_embedding_accuracy(merged_model.fc, self.retainfull_loader_real, opt.device)/100
                 full_fgt_acc = evaluate_embedding_accuracy(merged_model.fc, self.forgetfull_loader_real, opt.device)/100
 
@@ -349,7 +364,10 @@ class BaseMethod:
                     seed=opt.seed,
                     retain_count=retain_count,
                     forget_count=forget_count,
-                    total_count=total_count)
+                    total_count=total_count,
+                        test_retain_acc=round(test_retain_acc, 4),
+                        test_fgt_acc=round(test_fgt_acc, 4)
+                    )
 
             self.scheduler.step()
 
@@ -644,6 +662,9 @@ class NGFT_weighted(BaseMethod):
                 acc_train_fgt = evaluate_embedding_accuracy(self.Remainingmodel, self.train_fgt_loader, opt.device)/100
                 acc_val_ret = evaluate_embedding_accuracy(merged_model, self.val_retain_loader_img, opt.device)/100
                 acc_val_fgt = evaluate_embedding_accuracy(merged_model, self.val_fgt_loader_img, opt.device)/100
+                test_retain_acc = evaluate_embedding_accuracy(merged_model, self.test_retain_loader_img, opt.device) / 100.0
+                test_fgt_acc = evaluate_embedding_accuracy(merged_model, self.test_fgt_loader_img, opt.device) / 100.0
+                print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
                 full_retain_acc = evaluate_embedding_accuracy(merged_model.fc, self.retainfull_loader_real, opt.device)/100
                 full_fgt_acc = evaluate_embedding_accuracy(merged_model.fc, self.forgetfull_loader_real, opt.device)/100
                 self.net.train()
@@ -733,7 +754,10 @@ class NGFT_weighted(BaseMethod):
                     seed=opt.seed,
                     retain_count=retain_count,
                     forget_count=forget_count,
-                    total_count=total_count)
+                    total_count=total_count,
+                        test_retain_acc=round(test_retain_acc, 4),
+                        test_fgt_acc=round(test_fgt_acc, 4)
+                    )
 
 
 
@@ -935,6 +959,9 @@ class Delete(BaseMethod):
                 acc_train_fgt    = evaluate_embedding_accuracy(self.Remainingmodel, self.train_fgt_loader,   opt.device)/100.0
                 acc_val_ret = evaluate_embedding_accuracy(self._merged_full, self.val_retain_loader_img, opt.device)/100.0
                 acc_val_fgt = evaluate_embedding_accuracy(self._merged_full, self.val_fgt_loader_img,    opt.device)/100.0
+                test_retain_acc = evaluate_embedding_accuracy(self._merged_full, self.test_retain_loader_img, opt.device) / 100.0
+                test_fgt_acc = evaluate_embedding_accuracy(self._merged_full, self.test_fgt_loader_img, opt.device) / 100.0
+                print(f"Test Retain Acc: {test_retain_acc:.4f}, Test Forget Acc: {test_fgt_acc:.4f}")
                 full_retain_acc = evaluate_embedding_accuracy(self._merged_full.fc, self.retainfull_loader_real, opt.device)/100.0
                 full_fgt_acc = evaluate_embedding_accuracy(self._merged_full.fc, self.forgetfull_loader_real, opt.device)/100.0
 
@@ -1011,7 +1038,10 @@ class Delete(BaseMethod):
                     seed=opt.seed,
                     retain_count=retain_count,
                     forget_count=forget_count,
-                    total_count=total_count)
+                    total_count=total_count,
+                        test_retain_acc=round(test_retain_acc, 4),
+                        test_fgt_acc=round(test_fgt_acc, 4)
+                    )
 
             self.scheduler.step()
 
