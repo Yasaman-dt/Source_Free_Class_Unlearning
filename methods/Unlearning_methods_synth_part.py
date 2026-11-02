@@ -76,7 +76,7 @@ def evaluate_embedding_accuracy(model, dataloader, device):
     return 100 * correct / total if total > 0 else 0
 
 
-def log_epoch_to_csv(epoch, epoch_times,train_retain_acc, train_fgt_acc, val_test_retain_acc, val_test_fgt_acc, val_full_retain_acc, val_full_fgt_acc, AUS, mode, dataset, model, class_to_remove, seed, retain_count, forget_count,total_count):
+def log_epoch_to_csv(epoch, epoch_times,train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, mode, dataset, model, class_to_remove, seed, retain_count, forget_count,total_count):
     os.makedirs(f'results_synth/samples_per_class_{opt.samples_per_class}/{mode}/epoch_logs_m{n_model}_lr{opt.lr_unlearn}', exist_ok=True)
 
     if isinstance(class_to_remove, list):
@@ -90,10 +90,10 @@ def log_epoch_to_csv(epoch, epoch_times,train_retain_acc, train_fgt_acc, val_tes
     with open(csv_path, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
         if not file_exists:
-            writer.writerow(['epoch', 'epoch_times', 'mode', 'Forget Class', 'seed', 'train_retain_acc', 'train_fgt_acc', 'val_test_retain_acc', 'val_test_fgt_acc', 'val_full_retain_acc', 'val_full_fgt_acc', 'AUS', 'retain_count', 'forget_count','total_count'])
-        writer.writerow([epoch, epoch_times, mode, class_name, seed, train_retain_acc, train_fgt_acc, val_test_retain_acc, val_test_fgt_acc, val_full_retain_acc, val_full_fgt_acc, AUS, retain_count, forget_count,total_count])
+            writer.writerow(['epoch', 'epoch_times', 'mode', 'Forget Class', 'seed', 'train_retain_acc', 'train_fgt_acc', 'val_retain_acc', 'val_fgt_acc', 'full_retain_acc', 'full_fgt_acc', 'AUS', 'retain_count', 'forget_count','total_count'])
+        writer.writerow([epoch, epoch_times, mode, class_name, seed, train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, retain_count, forget_count,total_count])
 
-def log_summary_across_classes(best_epoch, train_retain_acc, train_fgt_acc, val_test_retain_acc, val_test_fgt_acc, val_full_retain_acc, val_full_fgt_acc, AUS, mode, dataset, model, class_to_remove, seed, retain_count, forget_count,total_count, unlearning_time_until_best):
+def log_summary_across_classes(best_epoch, train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, mode, dataset, model, class_to_remove, seed, retain_count, forget_count,total_count, unlearning_time_until_best):
     os.makedirs('results_synth', exist_ok=True)
     summary_path = f'results_synth/samples_per_class_{opt.samples_per_class}/{mode}/{dataset}_{model}_unlearning_summary_m{n_model}_lr{opt.lr_unlearn}.csv'
     file_exists = os.path.isfile(summary_path)
@@ -106,8 +106,8 @@ def log_summary_across_classes(best_epoch, train_retain_acc, train_fgt_acc, val_
     with open(summary_path, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
         if not file_exists:
-            writer.writerow(['epoch', 'Forget Class', 'seed', 'mode', 'dataset', 'model', 'train_retain_acc', 'train_fgt_acc', 'val_test_retain_acc', 'val_test_fgt_acc', 'val_full_retain_acc', 'val_full_fgt_acc', 'AUS', 'retain_count', 'forget_count','total_count','unlearning_time'])
-        writer.writerow([best_epoch, class_name, seed, mode, dataset, model, train_retain_acc, train_fgt_acc, val_test_retain_acc, val_test_fgt_acc, val_full_retain_acc, val_full_fgt_acc, AUS, retain_count, forget_count,total_count, unlearning_time_until_best])
+            writer.writerow(['epoch', 'Forget Class', 'seed', 'mode', 'dataset', 'model', 'train_retain_acc', 'train_fgt_acc', 'val_retain_acc', 'val_fgt_acc', 'full_retain_acc', 'full_fgt_acc', 'AUS', 'retain_count', 'forget_count','total_count','unlearning_time'])
+        writer.writerow([best_epoch, class_name, seed, mode, dataset, model, train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, retain_count, forget_count,total_count, unlearning_time_until_best])
 
         
 class BaseMethod:
@@ -115,12 +115,12 @@ class BaseMethod:
                  net,
                  train_retain_loader_img,
                  train_fgt_loader_img,
-                 test_retain_loader_img,
-                 test_fgt_loader_img,
+                 val_retain_loader_img,
+                 val_fgt_loader_img,
                  train_retain_loader,
                  train_fgt_loader,
-                 test_retain_loader,
-                 test_fgt_loader,
+                 val_retain_loader,
+                 val_fgt_loader,
                  retainfull_loader_real,
                  forgetfull_loader_real,
                  class_to_remove=None):
@@ -128,14 +128,14 @@ class BaseMethod:
         self.net = net
         self.train_retain_loader = train_retain_loader
         self.train_fgt_loader = train_fgt_loader
-        self.test_retain_loader = test_retain_loader
-        self.test_fgt_loader = test_fgt_loader
+        self.val_retain_loader = val_retain_loader
+        self.val_fgt_loader = val_fgt_loader
         self.retainfull_loader_real = retainfull_loader_real
         self.forgetfull_loader_real = forgetfull_loader_real
         self.train_retain_loader_img = train_retain_loader_img
         self.train_fgt_loader_img = train_fgt_loader_img
-        self.test_retain_loader_img = test_retain_loader_img
-        self.test_fgt_loader_img = test_fgt_loader_img
+        self.val_retain_loader_img = val_retain_loader_img
+        self.val_fgt_loader_img = val_fgt_loader_img
 
         self.class_to_remove = class_to_remove
 
@@ -156,19 +156,19 @@ class BaseMethod:
             print("train_fgt_loader_synth:", images.shape, labels.shape)
             break
 
-        for images, labels in self.test_retain_loader_img:
-            print("test_retain_loader_img:", images.shape, labels.shape)
+        for images, labels in self.val_retain_loader_img:
+            print("val_retain_loader_img:", images.shape, labels.shape)
             break
 
-        for images, labels in self.test_fgt_loader_img:
-            print("test_fgt_loader_img:", images.shape, labels.shape)
+        for images, labels in self.val_fgt_loader_img:
+            print("val_fgt_loader_img:", images.shape, labels.shape)
             break
         
         print(f"Train Retain Samples: {len(self.train_retain_loader.dataset)}")
-        print(f"Test Retain Samples: {len(self.test_retain_loader.dataset)}")
+        print(f"Validation Retain Samples: {len(self.val_retain_loader.dataset)}")
         print(f"Real Retain Full Samples: {len(self.retainfull_loader_real.dataset)}")
         print(f"Train forget Samples: {len(self.train_fgt_loader.dataset)}")
-        print(f"Test forget Samples: {len(self.test_fgt_loader.dataset)}")
+        print(f"Validation forget Samples: {len(self.val_fgt_loader.dataset)}")
         print(f"Real forget Full Samples: {len(self.forgetfull_loader_real.dataset)}")
 
     def loss_f(self, net, inputs, targets):
@@ -198,15 +198,15 @@ class BaseMethod:
         merged_model.avgpool = self.Remainingmodel.avgpool
         merged_model.fc = self.Remainingmodel.fc
 
-        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_test_fgt == 0
+        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_val_fgt == 0
         zero_acc_patience = 1000    # Stop if this happens for 50+ consecutive epochs
 
         aus_history = []
         results = []
-        a_or_value = evaluate_embedding_accuracy(merged_model, self.test_retain_loader_img, opt.device)/100
+        a_or_value = evaluate_embedding_accuracy(merged_model, self.val_retain_loader_img, opt.device)/100
         print(a_or_value)
         
-        a_or_value = evaluate_embedding_accuracy(merged_model.fc, self.test_retain_loader, opt.device)/100
+        a_or_value = evaluate_embedding_accuracy(merged_model.fc, self.val_retain_loader, opt.device)/100
         print(a_or_value)
         
         retain_count = count_samples(self.train_retain_loader_img)
@@ -233,17 +233,17 @@ class BaseMethod:
                 self.net.eval()
                 acc_train_ret = evaluate_embedding_accuracy(self.Remainingmodel, self.train_retain_loader, opt.device)/100
                 acc_train_fgt = evaluate_embedding_accuracy(self.Remainingmodel, self.train_fgt_loader, opt.device)/100
-                acc_test_val_ret = evaluate_embedding_accuracy(merged_model, self.test_retain_loader_img, opt.device)/100
-                acc_test_val_fgt = evaluate_embedding_accuracy(merged_model, self.test_fgt_loader_img, opt.device)/100
-                acc_full_val_ret = evaluate_embedding_accuracy(merged_model.fc, self.retainfull_loader_real, opt.device)/100
-                acc_full_val_fgt = evaluate_embedding_accuracy(merged_model.fc, self.forgetfull_loader_real, opt.device)/100
+                acc_val_ret = evaluate_embedding_accuracy(merged_model, self.val_retain_loader_img, opt.device)/100
+                acc_val_fgt = evaluate_embedding_accuracy(merged_model, self.val_fgt_loader_img, opt.device)/100
+                full_retain_acc = evaluate_embedding_accuracy(merged_model.fc, self.retainfull_loader_real, opt.device)/100
+                full_fgt_acc = evaluate_embedding_accuracy(merged_model.fc, self.forgetfull_loader_real, opt.device)/100
 
 
 
                 self.net.train()
                 
-                a_t = Complex(acc_test_val_ret, 0.0)
-                a_f = Complex(acc_test_val_fgt, 0.0)
+                a_t = Complex(acc_val_ret, 0.0)
+                a_f = Complex(acc_val_fgt, 0.0)
                 a_or = Complex(a_or_value, 0.0)
 
                 aus_result = AUS(a_t, a_or, a_f)
@@ -255,10 +255,10 @@ class BaseMethod:
 
                 print(f"Train Retain Acc: {acc_train_ret:.3f},"
                       f"Train Forget Acc: {acc_train_fgt:.3f},"
-                      f"Val Retain Test Acc: {acc_test_val_ret:.3f},"
-                      f"Val Forget Test Acc: {acc_test_val_fgt:.3f},"
-                      f"Val Retain Full Acc: {acc_full_val_ret:.3f},"
-                      f"Val Forget Full Acc: {acc_full_val_fgt:.3f},"
+                      f"Val Retain Acc: {acc_val_ret:.3f},"
+                      f"Val Forget Acc: {acc_val_fgt:.3f},"
+                      f"Full Retain Acc: {full_retain_acc:.3f},"
+                      f"Full Forget Acc: {full_fgt_acc:.3f},"
                       f"target Acc: {self.target_accuracy:.3f},"
                       f"AUS: {aus_value:.3f}±{aus_error:.4f}")
                 
@@ -269,10 +269,10 @@ class BaseMethod:
 
                     best_acc_train_ret = acc_train_ret
                     best_acc_train_fgt = acc_train_fgt
-                    best_acc_test_val_ret = acc_test_val_ret
-                    best_acc_test_val_fgt = acc_test_val_fgt
-                    best_acc_full_val_ret = acc_full_val_ret
-                    best_acc_full_val_fgt = acc_full_val_fgt
+                    best_acc_val_ret = acc_val_ret
+                    best_acc_val_fgt = acc_val_fgt
+                    best_full_retain_acc = full_retain_acc
+                    best_full_fgt_acc = full_fgt_acc
 
 
                     # checkpoint_dir = f"checkpoints_main_part/{opt.dataset}/{opt.method}/samples_per_class_{opt.samples_per_class}"
@@ -288,13 +288,13 @@ class BaseMethod:
 
 
 
-                if acc_test_val_fgt == 0.0:
+                if acc_val_fgt == 0.0:
                     zero_acc_fgt_counter += 1
                 else:
                     zero_acc_fgt_counter = 0
 
                 if zero_acc_fgt_counter >= zero_acc_patience:
-                    print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                    print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                     break
     
                 if len(aus_history) > patience:
@@ -324,7 +324,7 @@ class BaseMethod:
 
                 
                 ## Early stopping condition
-                #if acc_test_fgt <= self.target_accuracy:
+                #if acc_val_fgt <= self.target_accuracy:
                 #    patience_counter += 1
                 #    if patience_counter >= patience_limit:
                 #        print("[Early Stopping Triggered]")
@@ -337,10 +337,10 @@ class BaseMethod:
                     epoch_times=duration,
                     train_retain_acc=round(acc_train_ret, 4),
                     train_fgt_acc=round(acc_train_fgt, 4),
-                    val_test_retain_acc=round(acc_test_val_ret, 4),
-                    val_test_fgt_acc=round(acc_test_val_fgt, 4),
-                    val_full_retain_acc=round(acc_full_val_ret, 4),
-                    val_full_fgt_acc=round(acc_full_val_fgt, 4),
+                    val_retain_acc=round(acc_val_ret, 4),
+                    val_fgt_acc=round(acc_val_fgt, 4),
+                    full_retain_acc=round(full_retain_acc, 4),
+                    full_fgt_acc=round(full_fgt_acc, 4),
                     AUS=round(aus_value, 4),
                     mode=opt.method,
                     dataset=opt.dataset,
@@ -359,10 +359,10 @@ class BaseMethod:
             best_epoch=best_epoch,
             train_retain_acc=round(best_acc_train_ret, 4),
             train_fgt_acc=round(best_acc_train_fgt, 4),
-            val_test_retain_acc=round(best_acc_test_val_ret, 4),
-            val_test_fgt_acc=round(best_acc_test_val_fgt, 4),
-            val_full_retain_acc=round(best_acc_full_val_ret, 4),
-            val_full_fgt_acc=round(best_acc_full_val_fgt, 4),
+            val_retain_acc=round(best_acc_val_ret, 4),
+            val_fgt_acc=round(best_acc_val_fgt, 4),
+            full_retain_acc=round(best_full_retain_acc, 4),
+            full_fgt_acc=round(best_full_fgt_acc, 4),
             AUS=round(best_aus, 4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -385,12 +385,12 @@ class FineTuning(BaseMethod):
                  net,
                  train_retain_loader_img,
                  train_fgt_loader_img,
-                 test_retain_loader_img,
-                 test_fgt_loader_img,
+                 val_retain_loader_img,
+                 val_fgt_loader_img,
                  train_retain_loader,
                  train_fgt_loader,
-                 test_retain_loader,
-                 test_fgt_loader,
+                 val_retain_loader,
+                 val_fgt_loader,
                  retainfull_loader_real,
                  forgetfull_loader_real,
                  class_to_remove=None):
@@ -398,12 +398,12 @@ class FineTuning(BaseMethod):
         super().__init__(net,
                          train_retain_loader_img,
                          train_fgt_loader_img,
-                         test_retain_loader_img,
-                         test_fgt_loader_img,
+                         val_retain_loader_img,
+                         val_fgt_loader_img,
                          train_retain_loader,
                          train_fgt_loader,
-                         test_retain_loader,
-                         test_fgt_loader,
+                         val_retain_loader,
+                         val_fgt_loader,
                          retainfull_loader_real,
                          forgetfull_loader_real)
         
@@ -420,24 +420,24 @@ class RandomLabels(BaseMethod):
                  net,
                  train_retain_loader_img,
                  train_fgt_loader_img,
-                 test_retain_loader_img,
-                 test_fgt_loader_img,
+                 val_retain_loader_img,
+                 val_fgt_loader_img,
                  train_retain_loader,
                  train_fgt_loader,
-                 test_retain_loader,
-                 test_fgt_loader,
+                 val_retain_loader,
+                 val_fgt_loader,
                  retainfull_loader_real,
                  forgetfull_loader_real,
                  class_to_remove=None):
         super().__init__(net,
                          train_retain_loader_img,
                          train_fgt_loader_img,
-                         test_retain_loader_img,
-                         test_fgt_loader_img,
+                         val_retain_loader_img,
+                         val_fgt_loader_img,
                          train_retain_loader,
                          train_fgt_loader,
-                         test_retain_loader,
-                         test_fgt_loader,
+                         val_retain_loader,
+                         val_fgt_loader,
                          retainfull_loader_real,
                          forgetfull_loader_real)
         self.loader = self.train_fgt_loader
@@ -460,24 +460,24 @@ class NegativeGradient(BaseMethod):
                  net,
                  train_retain_loader_img,
                  train_fgt_loader_img,
-                 test_retain_loader_img,
-                 test_fgt_loader_img,
+                 val_retain_loader_img,
+                 val_fgt_loader_img,
                  train_retain_loader,
                  train_fgt_loader,
-                 test_retain_loader,
-                 test_fgt_loader,
+                 val_retain_loader,
+                 val_fgt_loader,
                  retainfull_loader_real,
                  forgetfull_loader_real,
                  class_to_remove=None):
         super().__init__(net,
                          train_retain_loader_img,
                          train_fgt_loader_img,
-                         test_retain_loader_img,
-                         test_fgt_loader_img,
+                         val_retain_loader_img,
+                         val_fgt_loader_img,
                          train_retain_loader,
                          train_fgt_loader,
-                         test_retain_loader,
-                         test_fgt_loader,
+                         val_retain_loader,
+                         val_fgt_loader,
                          retainfull_loader_real,
                          forgetfull_loader_real)
         
@@ -495,12 +495,12 @@ class NegativeGradient(BaseMethod):
             print("train_fgt_loader_synth:", images.shape, labels.shape)
             break
 
-        for images, labels in self.test_retain_loader_img:
-            print("test_retain_loader_img:", images.shape, labels.shape)
+        for images, labels in self.val_retain_loader_img:
+            print("val_retain_loader_img:", images.shape, labels.shape)
             break
 
-        for images, labels in self.test_fgt_loader_img:
-            print("test_fgt_loader_img:", images.shape, labels.shape)
+        for images, labels in self.val_fgt_loader_img:
+            print("val_fgt_loader_img:", images.shape, labels.shape)
             break
 
 
@@ -514,12 +514,12 @@ class NGFT_weighted(BaseMethod):
                  net,
                  train_retain_loader_img,
                  train_fgt_loader_img,
-                 test_retain_loader_img,
-                 test_fgt_loader_img,
+                 val_retain_loader_img,
+                 val_fgt_loader_img,
                  train_retain_loader,
                  train_fgt_loader,
-                 test_retain_loader,
-                 test_fgt_loader,
+                 val_retain_loader,
+                 val_fgt_loader,
                  retainfull_loader_real,
                  forgetfull_loader_real,
                  class_to_remove=None):
@@ -527,12 +527,12 @@ class NGFT_weighted(BaseMethod):
         super().__init__(net,
                          train_retain_loader_img,
                          train_fgt_loader_img,
-                         test_retain_loader_img,
-                         test_fgt_loader_img,
+                         val_retain_loader_img,
+                         val_fgt_loader_img,
                          train_retain_loader,
                          train_fgt_loader,
-                         test_retain_loader,
-                         test_fgt_loader,
+                         val_retain_loader,
+                         val_fgt_loader,
                          retainfull_loader_real,
                          forgetfull_loader_real)
 
@@ -540,14 +540,14 @@ class NGFT_weighted(BaseMethod):
                                                      
         self.train_retain_loader_img = train_retain_loader_img
         self.train_fgt_loader_img = train_fgt_loader_img
-        self.test_retain_loader_img = test_retain_loader_img
-        self.test_fgt_loader_img = test_fgt_loader_img
+        self.val_retain_loader_img = val_retain_loader_img
+        self.val_fgt_loader_img = val_fgt_loader_img
         
         
         self.train_retain_loader = train_retain_loader
         self.train_fgt_loader = train_fgt_loader
-        self.test_retain_loader = test_retain_loader
-        self.test_fgt_loader = test_fgt_loader
+        self.val_retain_loader = val_retain_loader
+        self.val_fgt_loader = val_fgt_loader
         self.retainfull_loader_real = retainfull_loader_real
         self.forgetfull_loader_real = forgetfull_loader_real
         self.class_to_remove = class_to_remove
@@ -564,12 +564,12 @@ class NGFT_weighted(BaseMethod):
             print("train_fgt_loader_synth:", images.shape, labels.shape)
             break
 
-        for images, labels in self.test_retain_loader_img:
-            print("test_retain_loader_img:", images.shape, labels.shape)
+        for images, labels in self.val_retain_loader_img:
+            print("val_retain_loader_img:", images.shape, labels.shape)
             break
 
-        for images, labels in self.test_fgt_loader_img:
-            print("test_fgt_loader_img:", images.shape, labels.shape)
+        for images, labels in self.val_fgt_loader_img:
+            print("val_fgt_loader_img:", images.shape, labels.shape)
             break
         
         
@@ -606,10 +606,10 @@ class NGFT_weighted(BaseMethod):
         merged_model.avgpool = self.Remainingmodel.avgpool
         merged_model.fc = self.Remainingmodel.fc
 
-        a_or_value = evaluate_embedding_accuracy(merged_model, self.test_retain_loader_img, opt.device)/100
+        a_or_value = evaluate_embedding_accuracy(merged_model, self.val_retain_loader_img, opt.device)/100
         print(a_or_value)
         
-        a_or_value = evaluate_embedding_accuracy(merged_model.fc, self.test_retain_loader, opt.device)/100
+        a_or_value = evaluate_embedding_accuracy(merged_model.fc, self.val_retain_loader, opt.device)/100
         print(a_or_value)
         
         forget_loader = cycle(self.train_fgt_loader)
@@ -642,14 +642,14 @@ class NGFT_weighted(BaseMethod):
                 self.net.eval()
                 acc_train_ret = evaluate_embedding_accuracy(self.Remainingmodel, self.train_retain_loader, opt.device)/100
                 acc_train_fgt = evaluate_embedding_accuracy(self.Remainingmodel, self.train_fgt_loader, opt.device)/100
-                acc_test_val_ret = evaluate_embedding_accuracy(merged_model, self.test_retain_loader_img, opt.device)/100
-                acc_test_val_fgt = evaluate_embedding_accuracy(merged_model, self.test_fgt_loader_img, opt.device)/100
-                acc_full_val_ret = evaluate_embedding_accuracy(merged_model.fc, self.retainfull_loader_real, opt.device)/100
-                acc_full_val_fgt = evaluate_embedding_accuracy(merged_model.fc, self.forgetfull_loader_real, opt.device)/100
+                acc_val_ret = evaluate_embedding_accuracy(merged_model, self.val_retain_loader_img, opt.device)/100
+                acc_val_fgt = evaluate_embedding_accuracy(merged_model, self.val_fgt_loader_img, opt.device)/100
+                full_retain_acc = evaluate_embedding_accuracy(merged_model.fc, self.retainfull_loader_real, opt.device)/100
+                full_fgt_acc = evaluate_embedding_accuracy(merged_model.fc, self.forgetfull_loader_real, opt.device)/100
                 self.net.train()
 
-                a_t = Complex(acc_test_val_ret, 0.0)
-                a_f = Complex(acc_test_val_fgt, 0.0)
+                a_t = Complex(acc_val_ret, 0.0)
+                a_f = Complex(acc_val_fgt, 0.0)
                 a_or = Complex(a_or_value, 0.0)
                 aus_result = AUS(a_t, a_or, a_f)
                 aus_value = aus_result.value
@@ -658,10 +658,10 @@ class NGFT_weighted(BaseMethod):
 
                 print(f"Train Retain Acc: {acc_train_ret:.3f},"
                       f"Train Forget Acc: {acc_train_fgt:.3f},"
-                      f"Val Retain Test Acc: {acc_test_val_ret:.3f},"
-                      f"Val Forget Test Acc: {acc_test_val_fgt:.3f},"
-                      f"Val Retain Full Acc: {acc_full_val_ret:.3f},"
-                      f"Val Forget Full Acc: {acc_full_val_fgt:.3f},"
+                      f"Val Retain Acc: {acc_val_ret:.3f},"
+                      f"Val Forget Acc: {acc_val_fgt:.3f},"
+                      f"Full Retain Acc: {full_retain_acc:.3f},"
+                      f"Full Forget Acc: {full_fgt_acc:.3f},"
                       f"target Acc: {self.target_accuracy:.3f},"
                       f"AUS: {aus_value:.3f}±{aus_error:.4f}")
 
@@ -671,10 +671,10 @@ class NGFT_weighted(BaseMethod):
                     best_epoch = epoch
                     best_acc_train_ret = acc_train_ret
                     best_acc_train_fgt = acc_train_fgt
-                    best_acc_test_val_ret = acc_test_val_ret
-                    best_acc_test_val_fgt = acc_test_val_fgt
-                    best_acc_full_val_ret = acc_full_val_ret
-                    best_acc_full_val_fgt = acc_full_val_fgt
+                    best_acc_val_ret = acc_val_ret
+                    best_acc_val_fgt = acc_val_fgt
+                    best_full_retain_acc = full_retain_acc
+                    best_full_fgt_acc = full_fgt_acc
 
 
                     # checkpoint_dir = f"checkpoints_main_part/{opt.dataset}/{opt.method}/samples_per_class_{opt.samples_per_class}"
@@ -694,13 +694,13 @@ class NGFT_weighted(BaseMethod):
 
 
 
-                if acc_test_val_fgt == 0.0:
+                if acc_val_fgt == 0.0:
                     zero_acc_fgt_counter += 1
                 else:
                     zero_acc_fgt_counter = 0
 
                 if zero_acc_fgt_counter >= zero_acc_patience:
-                    print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                    print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                     break
 
                 if len(aus_history) > patience:
@@ -721,10 +721,10 @@ class NGFT_weighted(BaseMethod):
                     epoch_times=duration,
                     train_retain_acc=round(acc_train_ret, 4),
                     train_fgt_acc=round(acc_train_fgt, 4),
-                    val_test_retain_acc=round(acc_test_val_ret, 4),
-                    val_test_fgt_acc=round(acc_test_val_fgt, 4),
-                    val_full_retain_acc=round(acc_full_val_ret, 4),
-                    val_full_fgt_acc=round(acc_full_val_fgt, 4),
+                    val_retain_acc=round(acc_val_ret, 4),
+                    val_fgt_acc=round(acc_val_fgt, 4),
+                    full_retain_acc=round(full_retain_acc, 4),
+                    full_fgt_acc=round(full_fgt_acc, 4),
                     AUS=round(aus_value, 4),
                     mode=opt.method,
                     dataset=opt.dataset,
@@ -746,10 +746,10 @@ class NGFT_weighted(BaseMethod):
             best_epoch=best_epoch,
             train_retain_acc=round(best_acc_train_ret, 4),
             train_fgt_acc=round(best_acc_train_fgt, 4),
-            val_test_retain_acc=round(best_acc_test_val_ret, 4),
-            val_test_fgt_acc=round(best_acc_test_val_fgt, 4),
-            val_full_retain_acc=round(best_acc_full_val_ret, 4),
-            val_full_fgt_acc=round(best_acc_full_val_fgt, 4),
+            val_retain_acc=round(best_acc_val_ret, 4),
+            val_fgt_acc=round(best_acc_val_fgt, 4),
+            full_retain_acc=round(best_full_retain_acc, 4),
+            full_fgt_acc=round(best_full_fgt_acc, 4),
             AUS=round(best_aus, 4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -784,12 +784,12 @@ class Delete(BaseMethod):
                  net,
                  train_retain_loader_img,
                  train_fgt_loader_img,
-                 test_retain_loader_img,
-                 test_fgt_loader_img,
+                 val_retain_loader_img,
+                 val_fgt_loader_img,
                  train_retain_loader,   # features at split
                  train_fgt_loader,      # features at split
-                 test_retain_loader,    # features at split (optional)
-                 test_fgt_loader,       # features at split (optional)
+                 val_retain_loader,    # features at split (optional)
+                 val_fgt_loader,       # features at split (optional)
                  retainfull_loader_real,  # IMAGES (full pipeline)
                  forgetfull_loader_real,  # IMAGES (full pipeline)
                  class_to_remove=None):
@@ -797,12 +797,12 @@ class Delete(BaseMethod):
         super().__init__(net,
                          train_retain_loader_img,
                          train_fgt_loader_img,
-                         test_retain_loader_img,
-                         test_fgt_loader_img,
+                         val_retain_loader_img,
+                         val_fgt_loader_img,
                          train_retain_loader,
                          train_fgt_loader,
-                         test_retain_loader,
-                         test_fgt_loader,
+                         val_retain_loader,
+                         val_fgt_loader,
                          retainfull_loader_real,
                          forgetfull_loader_real)
 
@@ -838,7 +838,7 @@ class Delete(BaseMethod):
         with torch.no_grad():
             # Baseline (original) retain accuracy on images using the teacher/full original
             # (this is your A_or)
-            self.a_or_value = evaluate_embedding_accuracy(self._merged_teacher, test_retain_loader_img, opt.device) / 100.0
+            self.a_or_value = evaluate_embedding_accuracy(self._merged_teacher, val_retain_loader_img, opt.device) / 100.0
 
         # Early-stop bookkeeping
         self.zero_acc_patience = 1000
@@ -846,7 +846,7 @@ class Delete(BaseMethod):
 
         # Optional sanity prints
         # for images, labels in self.train_retain_loader: print("train_retain_loader (features):", images.shape, labels.shape); break
-        # for images, labels in self.test_retain_loader_img: print("test_retain_loader_img (images):", images.shape, labels.shape); break
+        # for images, labels in self.val_retain_loader_img: print("val_retain_loader_img (images):", images.shape, labels.shape); break
 
     def _build_merged_full(self, use_teacher: bool = False):
         """
@@ -891,17 +891,17 @@ class Delete(BaseMethod):
             self._merged_full = self._build_merged_full()              # ensure fresh refs
             init_train_ret    = evaluate_embedding_accuracy(self.Remainingmodel, self.train_retain_loader, opt.device)/100.0
             init_train_fgt    = evaluate_embedding_accuracy(self.Remainingmodel, self.train_fgt_loader,   opt.device)/100.0
-            init_test_val_ret = evaluate_embedding_accuracy(self._merged_full, self.test_retain_loader_img, opt.device)/100.0
-            init_test_val_fgt = evaluate_embedding_accuracy(self._merged_full, self.test_fgt_loader_img,    opt.device)/100.0
-            init_full_val_ret = evaluate_embedding_accuracy(self._merged_full.fc, self.retainfull_loader_real, opt.device)/100.0
-            init_full_val_fgt = evaluate_embedding_accuracy(self._merged_full.fc, self.forgetfull_loader_real, opt.device)/100.0
+            init_val_ret = evaluate_embedding_accuracy(self._merged_full, self.val_retain_loader_img, opt.device)/100.0
+            init_val_fgt = evaluate_embedding_accuracy(self._merged_full, self.val_fgt_loader_img,    opt.device)/100.0
+            init_full_retain_acc = evaluate_embedding_accuracy(self._merged_full.fc, self.retainfull_loader_real, opt.device)/100.0
+            init_full_fgt_acc = evaluate_embedding_accuracy(self._merged_full.fc, self.forgetfull_loader_real, opt.device)/100.0
 
         best_acc_train_ret    = init_train_ret
         best_acc_train_fgt    = init_train_fgt
-        best_acc_test_val_ret = init_test_val_ret
-        best_acc_test_val_fgt = init_test_val_fgt
-        best_acc_full_val_ret = init_full_val_ret
-        best_acc_full_val_fgt = init_full_val_fgt
+        best_acc_val_ret = init_val_ret
+        best_acc_val_fgt = init_val_fgt
+        best_full_retain_acc = init_full_retain_acc
+        best_full_fgt_acc = init_full_fgt_acc
 
         retain_count = count_samples(self.train_retain_loader)
         forget_count = count_samples(self.train_fgt_loader)
@@ -933,21 +933,21 @@ class Delete(BaseMethod):
 
                 acc_train_ret    = evaluate_embedding_accuracy(self.Remainingmodel, self.train_retain_loader, opt.device)/100.0
                 acc_train_fgt    = evaluate_embedding_accuracy(self.Remainingmodel, self.train_fgt_loader,   opt.device)/100.0
-                acc_test_val_ret = evaluate_embedding_accuracy(self._merged_full, self.test_retain_loader_img, opt.device)/100.0
-                acc_test_val_fgt = evaluate_embedding_accuracy(self._merged_full, self.test_fgt_loader_img,    opt.device)/100.0
-                acc_full_val_ret = evaluate_embedding_accuracy(self._merged_full.fc, self.retainfull_loader_real, opt.device)/100.0
-                acc_full_val_fgt = evaluate_embedding_accuracy(self._merged_full.fc, self.forgetfull_loader_real, opt.device)/100.0
+                acc_val_ret = evaluate_embedding_accuracy(self._merged_full, self.val_retain_loader_img, opt.device)/100.0
+                acc_val_fgt = evaluate_embedding_accuracy(self._merged_full, self.val_fgt_loader_img,    opt.device)/100.0
+                full_retain_acc = evaluate_embedding_accuracy(self._merged_full.fc, self.retainfull_loader_real, opt.device)/100.0
+                full_fgt_acc = evaluate_embedding_accuracy(self._merged_full.fc, self.forgetfull_loader_real, opt.device)/100.0
 
-                a_t  = Complex(acc_test_val_ret, 0.0)
-                a_f  = Complex(acc_test_val_fgt, 0.0)
+                a_t  = Complex(acc_val_ret, 0.0)
+                a_f  = Complex(acc_val_fgt, 0.0)
                 a_or = Complex(self.a_or_value,  0.0)
                 aus  = AUS(a_t, a_or, a_f).value
                 aus_hist.append(aus)
 
                 print(f"[epoch {epoch}] loss={loss.item():.4f} | "
                       f"Train Ret {acc_train_ret:.3f}  Fgt {acc_train_fgt:.3f} | "
-                      f"Val Ret {acc_test_val_ret:.3f}  Fgt {acc_test_val_fgt:.3f} | "
-                      f"Full Ret {acc_full_val_ret:.3f}  Fgt {acc_full_val_fgt:.3f} | AUS {aus:.3f}")
+                      f"Val Ret {acc_val_ret:.3f}  Fgt {acc_val_fgt:.3f} | "
+                      f"Full Ret {full_retain_acc:.3f}  Fgt {full_fgt_acc:.3f} | AUS {aus:.3f}")
 
                 # checkpoint best by AUS (save FULL model weights for convenience)
                 if aus > best_aus:
@@ -956,10 +956,10 @@ class Delete(BaseMethod):
                     best_state = deepcopy(self._merged_full.state_dict())
                     best_acc_train_ret    = acc_train_ret
                     best_acc_train_fgt    = acc_train_fgt
-                    best_acc_test_val_ret = acc_test_val_ret
-                    best_acc_test_val_fgt = acc_test_val_fgt
-                    best_acc_full_val_ret = acc_full_val_ret
-                    best_acc_full_val_fgt = acc_full_val_fgt
+                    best_acc_val_ret = acc_val_ret
+                    best_acc_val_fgt = acc_val_fgt
+                    best_full_retain_acc = full_retain_acc
+                    best_full_fgt_acc = full_fgt_acc
 
                 if getattr(opt, "save_model", False):
                     ckpt_dir = f"checkpoints_main/{opt.dataset}/{opt.method}/samples_per_class_{opt.samples_per_class}"
@@ -974,7 +974,7 @@ class Delete(BaseMethod):
                     print(f"[Checkpoint NOT saved] AUS={aus:.4f} (kept in memory)")
 
                 # early-stops
-                if acc_test_val_fgt == 0.0:
+                if acc_val_fgt == 0.0:
                     zero_fgt += 1
                 else:
                     zero_fgt = 0
@@ -999,10 +999,10 @@ class Delete(BaseMethod):
                     epoch_times=duration,
                     train_retain_acc=round(acc_train_ret, 4),
                     train_fgt_acc=round(acc_train_fgt, 4),
-                    val_test_retain_acc=round(acc_test_val_ret, 4),
-                    val_test_fgt_acc=round(acc_test_val_fgt, 4),
-                    val_full_retain_acc=round(acc_full_val_ret, 4),
-                    val_full_fgt_acc=round(acc_full_val_fgt, 4),
+                    val_retain_acc=round(acc_val_ret, 4),
+                    val_fgt_acc=round(acc_val_fgt, 4),
+                    full_retain_acc=round(full_retain_acc, 4),
+                    full_fgt_acc=round(full_fgt_acc, 4),
                     AUS=round(aus, 4),
                     mode=opt.method,
                     dataset=opt.dataset,
@@ -1025,10 +1025,10 @@ class Delete(BaseMethod):
             best_epoch=best_epoch,
             train_retain_acc=round(best_acc_train_ret, 4),
             train_fgt_acc=round(best_acc_train_fgt, 4),
-            val_test_retain_acc=round(best_acc_test_val_ret, 4),
-            val_test_fgt_acc=round(best_acc_test_val_fgt, 4),
-            val_full_retain_acc=round(best_acc_full_val_ret, 4),
-            val_full_fgt_acc=round(best_acc_full_val_fgt, 4),
+            val_retain_acc=round(best_acc_val_ret, 4),
+            val_fgt_acc=round(best_acc_val_fgt, 4),
+            full_retain_acc=round(best_full_retain_acc, 4),
+            full_fgt_acc=round(best_full_fgt_acc, 4),
             AUS=round(best_aus, 4),
             mode=opt.method,
             dataset=opt.dataset,

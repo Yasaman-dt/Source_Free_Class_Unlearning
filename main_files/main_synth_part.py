@@ -280,18 +280,21 @@ def main(train_retain_loader_img,
         if opt.mode == "CR":
             #set tollerance for stopping criteria
             opt.target_accuracy = 0.00
+            if any(loader is None for loader in (val_retain_loader_img, val_fgt_loader_img, val_retain_loader, val_fgt_loader)):
+                raise ValueError("Image and embedding validation loaders are required for checkpoint selection.")
 
-            approach = choose_method(opt.method)(pretr_model,
-                                                    train_retain_loader_img,
-                                                    train_fgt_loader_img,
-                                                    val_retain_loader_img if val_retain_loader_img is not None else test_retain_loader_img,
-                                                    val_fgt_loader_img if val_fgt_loader_img is not None else test_fgt_loader_img,
-                                                    retain_loader_synth,
-                                                    forget_loader_synth,
-                                                    val_retain_loader if val_retain_loader is not None else test_retain_loader,
-                                                    val_fgt_loader if val_fgt_loader is not None else test_fgt_loader,
-                                                    retainfull_loader_real,
-                                                    forgetfull_loader_real,
+            approach = choose_method(opt.method)(
+                                                    net=pretr_model,
+                                                    train_retain_loader_img=train_retain_loader_img,
+                                                    train_fgt_loader_img=train_fgt_loader_img,
+                                                    val_retain_loader_img=val_retain_loader_img,
+                                                    val_fgt_loader_img=val_fgt_loader_img,
+                                                    train_retain_loader=retain_loader_synth,
+                                                    train_fgt_loader=forget_loader_synth,
+                                                    val_retain_loader=val_retain_loader,
+                                                    val_fgt_loader=val_fgt_loader,
+                                                    retainfull_loader_real=retainfull_loader_real,
+                                                    forgetfull_loader_real=forgetfull_loader_real,
                                                     class_to_remove=class_to_remove)  #generated samples
 
 

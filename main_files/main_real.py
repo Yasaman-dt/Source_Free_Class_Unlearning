@@ -173,13 +173,16 @@ def main(train_retain_loader_real, train_fgt_loader_real, test_retain_loader, te
         if opt.mode == "CR":
             #set tollerance for stopping criteria
             opt.target_accuracy = 0.00
-            #approach = choose_method(opt.method)(pretr_model, retain_loader_synth, forget_loader_synth, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=class_to_remove)  #generated samples
-            # Select checkpoints on the 10% training validation split; keep the
-            # official test loaders separate for final reporting below.
-            approach = choose_method(opt.method)(pretr_model, train_retain_loader_real, train_fgt_loader_real,
-                                                val_retain_loader if val_retain_loader is not None else test_retain_loader,
-                                                val_fgt_loader if val_fgt_loader is not None else test_fgt_loader,
-                                                retainfull_loader_real, forgetfull_loader_real,
+            if val_retain_loader is None or val_fgt_loader is None:
+                raise ValueError("Validation loaders are required for unlearning checkpoint selection.")
+            approach = choose_method(opt.method)(
+                                                net=pretr_model,
+                                                train_retain_loader=train_retain_loader_real,
+                                                train_fgt_loader=train_fgt_loader_real,
+                                                val_retain_loader=val_retain_loader,
+                                                val_fgt_loader=val_fgt_loader,
+                                                retainfull_loader_real=retainfull_loader_real,
+                                                forgetfull_loader_real=forgetfull_loader_real,
                                                 class_to_remove=class_to_remove) #real samples
 
         if opt.load_unlearned_model:

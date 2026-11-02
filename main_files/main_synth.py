@@ -279,12 +279,18 @@ def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_f
         if opt.mode == "CR":
             #set tollerance for stopping criteria
             opt.target_accuracy = 0.00
+            if val_retain_loader is None or val_fgt_loader is None:
+                raise ValueError("Validation loaders are required for unlearning checkpoint selection.")
             # Synthetic samples remain the unlearning training data. Select
             # checkpoints on the real 10% training validation split instead.
-            approach = choose_method(opt.method)(pretr_model, retain_loader_synth, forget_loader_synth,
-                                                val_retain_loader if val_retain_loader is not None else test_retain_loader,
-                                                val_fgt_loader if val_fgt_loader is not None else test_fgt_loader,
-                                                retainfull_loader_real, forgetfull_loader_real,
+            approach = choose_method(opt.method)(
+                                                net=pretr_model,
+                                                train_retain_loader=retain_loader_synth,
+                                                train_fgt_loader=forget_loader_synth,
+                                                val_retain_loader=val_retain_loader,
+                                                val_fgt_loader=val_fgt_loader,
+                                                retainfull_loader_real=retainfull_loader_real,
+                                                forgetfull_loader_real=forgetfull_loader_real,
                                                 class_to_remove=class_to_remove)  #generated samples
             #approach = choose_method(opt.method)(pretr_model, train_retain_loader_real, train_fgt_loader_real, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=class_to_remove) #real samples
 

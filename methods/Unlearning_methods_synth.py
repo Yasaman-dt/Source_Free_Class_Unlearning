@@ -193,8 +193,8 @@ def evaluate_embedding_accuracy(model, dataloader, device):
 
 
 def log_epoch_to_csv(epoch, epoch_times, train_retain_acc, train_fgt_acc,
-                     val_test_retain_acc, val_test_fgt_acc,
-                     val_full_retain_acc, val_full_fgt_acc, AUS,
+                     val_retain_acc, val_fgt_acc,
+                     full_retain_acc, full_fgt_acc, AUS,
                      mode, dataset, model, class_to_remove, seed,
                      retain_count, forget_count, total_count):
 
@@ -219,20 +219,20 @@ def log_epoch_to_csv(epoch, epoch_times, train_retain_acc, train_fgt_acc,
             writer.writerow([
                 'epoch', 'epoch_times', 'mode', 'Forget Class', 'seed',
                 'train_retain_acc', 'train_fgt_acc',
-                'val_test_retain_acc', 'val_test_fgt_acc',
-                'val_full_retain_acc', 'val_full_fgt_acc',
+                'val_retain_acc', 'val_fgt_acc',
+                'full_retain_acc', 'full_fgt_acc',
                 'AUS', 'retain_count', 'forget_count', 'total_count'
             ])
         writer.writerow([
             epoch, epoch_times, mode, forget_tag, seed,
             train_retain_acc, train_fgt_acc,
-            val_test_retain_acc, val_test_fgt_acc,
-            val_full_retain_acc, val_full_fgt_acc,
+            val_retain_acc, val_fgt_acc,
+            full_retain_acc, full_fgt_acc,
             AUS, retain_count, forget_count, total_count
         ])
         
         
-def log_summary_across_classes(best_epoch, train_retain_acc, train_fgt_acc, val_test_retain_acc, val_test_fgt_acc, val_full_retain_acc, val_full_fgt_acc, AUS, mode, dataset, model, class_to_remove, seed, retain_count, forget_count,total_count, unlearning_time_until_best):
+def log_summary_across_classes(best_epoch, train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, mode, dataset, model, class_to_remove, seed, retain_count, forget_count,total_count, unlearning_time_until_best):
     os.makedirs(f'results_synth_{opt.noise_type}', exist_ok=True)
     summary_path = f'results_synth_{opt.noise_type}/samples_per_class_{opt.samples_per_class}/{mode}/{dataset}_{model}_unlearning_summary_m{n_model}_lr{opt.lr_unlearn}.csv'
     file_exists = os.path.isfile(summary_path)
@@ -245,41 +245,41 @@ def log_summary_across_classes(best_epoch, train_retain_acc, train_fgt_acc, val_
     with open(summary_path, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
         if not file_exists:
-            writer.writerow(['epoch', 'Forget Class', 'seed', 'mode', 'dataset', 'model', 'train_retain_acc', 'train_fgt_acc', 'val_test_retain_acc', 'val_test_fgt_acc', 'val_full_retain_acc', 'val_full_fgt_acc', 'AUS', 'retain_count', 'forget_count','total_count','unlearning_time'])
-        writer.writerow([best_epoch, class_name, seed, mode, dataset, model, train_retain_acc, train_fgt_acc, val_test_retain_acc, val_test_fgt_acc, val_full_retain_acc, val_full_fgt_acc, AUS, retain_count, forget_count,total_count, unlearning_time_until_best])
+            writer.writerow(['epoch', 'Forget Class', 'seed', 'mode', 'dataset', 'model', 'train_retain_acc', 'train_fgt_acc', 'val_retain_acc', 'val_fgt_acc', 'full_retain_acc', 'full_fgt_acc', 'AUS', 'retain_count', 'forget_count','total_count','unlearning_time'])
+        writer.writerow([best_epoch, class_name, seed, mode, dataset, model, train_retain_acc, train_fgt_acc, val_retain_acc, val_fgt_acc, full_retain_acc, full_fgt_acc, AUS, retain_count, forget_count,total_count, unlearning_time_until_best])
 
-def calculate_AUS(A_test_forget, A_test_retain, Aor):
-    A_test_forget = A_test_forget
-    A_test_retain = A_test_retain
+def calculate_AUS(A_val_forget, A_val_retain, Aor):
+    A_val_forget = A_val_forget
+    A_val_retain = A_val_retain
     Aor = Aor
     """
     Calculate the AUS based on the given accuracy values.
 
     Args:
-        A_test_forget (float): Accuracy on the forget test set (forgettest_val_acc).
-        A_test_retain (float): Accuracy on the retain test set (retaintest_val_acc).
+        A_val_forget (float): Accuracy on the forget validation set (val_fgt_acc).
+        A_val_retain (float): Accuracy on the retain validation set (val_retain_acc).
         Aor (float): Constant value for A_or (default is 84.72).
 
     Returns:
         float: The calculated AUS value.
     """
     # Calculate Delta
-    delta = abs(0 - A_test_forget)
+    delta = abs(0 - A_val_forget)
     
     # Calculate AUS
-    AUS = (1 - (Aor - A_test_retain)) / (1 + delta)
+    AUS = (1 - (Aor - A_val_retain)) / (1 + delta)
     
     return AUS
     
     
         
 class BaseMethod:
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real):
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real):
         self.net = net.to(opt.device)
         self.train_retain_loader = train_retain_loader
         self.train_fgt_loader = train_fgt_loader
-        self.test_retain_loader = test_retain_loader
-        self.test_fgt_loader = test_fgt_loader
+        self.val_retain_loader = val_retain_loader
+        self.val_fgt_loader = val_fgt_loader
         self.retainfull_loader_real = retainfull_loader_real
         self.forgetfull_loader_real = forgetfull_loader_real
         self.head_fc = get_classifier(self.net)
@@ -291,10 +291,10 @@ class BaseMethod:
         self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=opt.scheduler, gamma=0.5)
 
         print(f"Train Retain Samples: {len(self.train_retain_loader.dataset)}")
-        print(f"Test Retain Samples: {len(self.test_retain_loader.dataset)}")
+        print(f"Validation Retain Samples: {len(self.val_retain_loader.dataset)}")
         print(f"Real Retain Full Samples: {len(self.retainfull_loader_real.dataset)}")
         print(f"Train forget Samples: {len(self.train_fgt_loader.dataset)}")
-        print(f"Test forget Samples: {len(self.test_fgt_loader.dataset)}")
+        print(f"Validation forget Samples: {len(self.val_fgt_loader.dataset)}")
         print(f"Real forget Full Samples: {len(self.forgetfull_loader_real.dataset)}")
 
     def loss_f(self, net, inputs, targets):
@@ -308,12 +308,12 @@ class BaseMethod:
         patience_counter = 0
         patience = opt.patience
 
-        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_test_fgt == 0
+        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_val_fgt == 0
         zero_acc_patience = 1000    # Stop if this happens for 50+ consecutive epochs
 
         aus_history = []
         results = []
-        a_or_value = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+        a_or_value = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
 
         retain_count = count_samples(self.train_retain_loader)
         forget_count = count_samples(self.train_fgt_loader)
@@ -339,15 +339,15 @@ class BaseMethod:
                 self.net.eval()
                 acc_train_ret = calculate_accuracy(self.net, self.train_retain_loader, use_fc_only=True)
                 acc_train_fgt = calculate_accuracy(self.net, self.train_fgt_loader, use_fc_only=True)
-                acc_test_val_ret = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
-                acc_test_val_fgt = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
-                acc_full_val_ret = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
-                acc_full_val_fgt = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
+                acc_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
+                acc_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+                full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
+                full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
 
                 self.net.train()
                 
-                a_t = Complex(acc_test_val_ret, 0.0)
-                a_f = Complex(acc_test_val_fgt, 0.0)
+                a_t = Complex(acc_val_ret, 0.0)
+                a_f = Complex(acc_val_fgt, 0.0)
                 a_or = Complex(a_or_value, 0.0)
 
                 aus_result = AUS(a_t, a_or, a_f)
@@ -359,10 +359,10 @@ class BaseMethod:
 
                 print(f"Train Retain Acc: {acc_train_ret:.3f},"
                       f"Train Forget Acc: {acc_train_fgt:.3f},"
-                      f"Val Retain Test Acc: {acc_test_val_ret:.3f},"
-                      f"Val Forget Test Acc: {acc_test_val_fgt:.3f},"
-                      f"Val Retain Full Acc: {acc_full_val_ret:.3f},"
-                      f"Val Forget Full Acc: {acc_full_val_fgt:.3f},"
+                      f"Val Retain Acc: {acc_val_ret:.3f},"
+                      f"Val Forget Acc: {acc_val_fgt:.3f},"
+                      f"Full Retain Acc: {full_retain_acc:.3f},"
+                      f"Full Forget Acc: {full_fgt_acc:.3f},"
                       f"target Acc: {self.target_accuracy:.3f},"
                       f"AUS: {aus_value:.3f}±{aus_error:.4f}")
                 
@@ -373,10 +373,10 @@ class BaseMethod:
 
                     best_acc_train_ret = acc_train_ret
                     best_acc_train_fgt = acc_train_fgt
-                    best_acc_test_val_ret = acc_test_val_ret
-                    best_acc_test_val_fgt = acc_test_val_fgt
-                    best_acc_full_val_ret = acc_full_val_ret
-                    best_acc_full_val_fgt = acc_full_val_fgt
+                    best_acc_val_ret = acc_val_ret
+                    best_acc_val_fgt = acc_val_fgt
+                    best_full_retain_acc = full_retain_acc
+                    best_full_fgt_acc = full_fgt_acc
 
 
                     checkpoint_dir = f"checkpoints_main/{opt.dataset}/{opt.method}/samples_per_class_{opt.samples_per_class}"
@@ -394,13 +394,13 @@ class BaseMethod:
 
 
 
-                if acc_test_val_fgt == 0.0:
+                if acc_val_fgt == 0.0:
                     zero_acc_fgt_counter += 1
                 else:
                     zero_acc_fgt_counter = 0
 
                 if zero_acc_fgt_counter >= zero_acc_patience:
-                    print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                    print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                     break
     
                 if len(aus_history) > patience:
@@ -430,7 +430,7 @@ class BaseMethod:
 
                 
                 ## Early stopping condition
-                #if acc_test_fgt <= self.target_accuracy:
+                #if acc_val_fgt <= self.target_accuracy:
                 #    patience_counter += 1
                 #    if patience_counter >= patience_limit:
                 #        print("[Early Stopping Triggered]")
@@ -443,10 +443,10 @@ class BaseMethod:
                     epoch_times=duration,
                     train_retain_acc=round(acc_train_ret, 4),
                     train_fgt_acc=round(acc_train_fgt, 4),
-                    val_test_retain_acc=round(acc_test_val_ret, 4),
-                    val_test_fgt_acc=round(acc_test_val_fgt, 4),
-                    val_full_retain_acc=round(acc_full_val_ret, 4),
-                    val_full_fgt_acc=round(acc_full_val_fgt, 4),
+                    val_retain_acc=round(acc_val_ret, 4),
+                    val_fgt_acc=round(acc_val_fgt, 4),
+                    full_retain_acc=round(full_retain_acc, 4),
+                    full_fgt_acc=round(full_fgt_acc, 4),
                     AUS=round(aus_value, 4),
                     mode=opt.method,
                     dataset=opt.dataset,
@@ -465,10 +465,10 @@ class BaseMethod:
             best_epoch=best_epoch,
             train_retain_acc=round(best_acc_train_ret, 4),
             train_fgt_acc=round(best_acc_train_fgt, 4),
-            val_test_retain_acc=round(best_acc_test_val_ret, 4),
-            val_test_fgt_acc=round(best_acc_test_val_fgt, 4),
-            val_full_retain_acc=round(best_acc_full_val_ret, 4),
-            val_full_fgt_acc=round(best_acc_full_val_fgt, 4),
+            val_retain_acc=round(best_acc_val_ret, 4),
+            val_fgt_acc=round(best_acc_val_fgt, 4),
+            full_retain_acc=round(best_full_retain_acc, 4),
+            full_fgt_acc=round(best_full_fgt_acc, 4),
             AUS=round(best_aus, 4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -490,8 +490,8 @@ class BaseMethod:
 
     
 class FineTuning(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
         self.loader = self.train_retain_loader
         self.target_accuracy=0.0
         self.class_to_remove = class_to_remove
@@ -504,8 +504,8 @@ class FineTuning(BaseMethod):
 
 
 class RandomLabels(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
         self.loader = self.train_fgt_loader
         self.class_to_remove = class_to_remove
         self.head_fc = get_classifier(self.net)
@@ -522,8 +522,8 @@ class RandomLabels(BaseMethod):
 
 
 class NegativeGradient(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
         self.loader = self.train_fgt_loader
         self.class_to_remove = class_to_remove
         self.head_fc = get_classifier(self.net)
@@ -535,13 +535,13 @@ class NegativeGradient(BaseMethod):
 
 
 class NGFT(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
 
         self.train_retain_loader = train_retain_loader
         self.train_fgt_loader = train_fgt_loader
-        self.test_retain_loader = test_retain_loader
-        self.test_fgt_loader = test_fgt_loader
+        self.val_retain_loader = val_retain_loader
+        self.val_fgt_loader = val_fgt_loader
         self.retainfull_loader_real = retainfull_loader_real
         self.forgetfull_loader_real = forgetfull_loader_real
         self.class_to_remove = class_to_remove
@@ -560,12 +560,12 @@ class NGFT(BaseMethod):
         patience_counter = 0
         patience = opt.patience
 
-        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_test_fgt == 0
+        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_val_fgt == 0
         zero_acc_patience = 1000    # Stop if this happens for 50+ consecutive epochs
 
         aus_history = []
         results = []
-        a_or_value = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+        a_or_value = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
 
         retain_count = count_samples(self.train_retain_loader)
         forget_count = count_samples(self.train_fgt_loader)
@@ -605,17 +605,17 @@ class NGFT(BaseMethod):
                 self.net.eval()
                 acc_train_ret = calculate_accuracy(self.net, self.train_retain_loader, use_fc_only=True)
                 acc_train_fgt = calculate_accuracy(self.net, self.train_fgt_loader, use_fc_only=True)
-                acc_test_val_ret = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
-                acc_test_val_fgt = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
-                acc_full_val_ret = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
-                acc_full_val_fgt = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
+                acc_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
+                acc_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+                full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
+                full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
 
 
 
                 self.net.train()
                 
-                a_t = Complex(acc_test_val_ret, 0.0)
-                a_f = Complex(acc_test_val_fgt, 0.0)
+                a_t = Complex(acc_val_ret, 0.0)
+                a_f = Complex(acc_val_fgt, 0.0)
                 a_or = Complex(a_or_value, 0.0)
 
                 aus_result = AUS(a_t, a_or, a_f)
@@ -627,10 +627,10 @@ class NGFT(BaseMethod):
 
                 print(f"Train Retain Acc: {acc_train_ret:.3f},"
                       f"Train Forget Acc: {acc_train_fgt:.3f},"
-                      f"Val Retain Test Acc: {acc_test_val_ret:.3f},"
-                      f"Val Forget Test Acc: {acc_test_val_fgt:.3f},"
-                      f"Val Retain Full Acc: {acc_full_val_ret:.3f},"
-                      f"Val Forget Full Acc: {acc_full_val_fgt:.3f},"
+                      f"Val Retain Acc: {acc_val_ret:.3f},"
+                      f"Val Forget Acc: {acc_val_fgt:.3f},"
+                      f"Full Retain Acc: {full_retain_acc:.3f},"
+                      f"Full Forget Acc: {full_fgt_acc:.3f},"
                       f"target Acc: {self.target_accuracy:.3f},"
                       f"AUS: {aus_value:.3f}±{aus_error:.4f}")
                 
@@ -641,19 +641,19 @@ class NGFT(BaseMethod):
 
                     best_acc_train_ret = acc_train_ret
                     best_acc_train_fgt = acc_train_fgt
-                    best_acc_test_val_ret = acc_test_val_ret
-                    best_acc_test_val_fgt = acc_test_val_fgt
-                    best_acc_full_val_ret = acc_full_val_ret
-                    best_acc_full_val_fgt = acc_full_val_fgt
+                    best_acc_val_ret = acc_val_ret
+                    best_acc_val_fgt = acc_val_fgt
+                    best_full_retain_acc = full_retain_acc
+                    best_full_fgt_acc = full_fgt_acc
                     
 
-                if acc_test_val_fgt == 0.0:
+                if acc_val_fgt == 0.0:
                     zero_acc_fgt_counter += 1
                 else:
                     zero_acc_fgt_counter = 0
 
                 if zero_acc_fgt_counter >= zero_acc_patience:
-                    print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                    print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                     break
     
                 if len(aus_history) > patience:
@@ -683,7 +683,7 @@ class NGFT(BaseMethod):
 
                 
                 ## Early stopping condition
-                #if acc_test_fgt <= self.target_accuracy:
+                #if acc_val_fgt <= self.target_accuracy:
                 #    patience_counter += 1
                 #    if patience_counter >= patience_limit:
                 #        print("[Early Stopping Triggered]")
@@ -696,10 +696,10 @@ class NGFT(BaseMethod):
                     epoch_times=duration,
                     train_retain_acc=round(acc_train_ret, 4),
                     train_fgt_acc=round(acc_train_fgt, 4),
-                    val_test_retain_acc=round(acc_test_val_ret, 4),
-                    val_test_fgt_acc=round(acc_test_val_fgt, 4),
-                    val_full_retain_acc=round(acc_full_val_ret, 4),
-                    val_full_fgt_acc=round(acc_full_val_fgt, 4),
+                    val_retain_acc=round(acc_val_ret, 4),
+                    val_fgt_acc=round(acc_val_fgt, 4),
+                    full_retain_acc=round(full_retain_acc, 4),
+                    full_fgt_acc=round(full_fgt_acc, 4),
                     AUS=round(aus_value, 4),
                     mode=opt.method,
                     dataset=opt.dataset,
@@ -718,10 +718,10 @@ class NGFT(BaseMethod):
             best_epoch=best_epoch,
             train_retain_acc=round(best_acc_train_ret, 4),
             train_fgt_acc=round(best_acc_train_fgt, 4),
-            val_test_retain_acc=round(best_acc_test_val_ret, 4),
-            val_test_fgt_acc=round(best_acc_test_val_fgt, 4),
-            val_full_retain_acc=round(best_acc_full_val_ret, 4),
-            val_full_fgt_acc=round(best_acc_full_val_fgt, 4),
+            val_retain_acc=round(best_acc_val_ret, 4),
+            val_fgt_acc=round(best_acc_val_fgt, 4),
+            full_retain_acc=round(best_full_retain_acc, 4),
+            full_fgt_acc=round(best_full_fgt_acc, 4),
             AUS=round(best_aus, 4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -741,13 +741,13 @@ class NGFT(BaseMethod):
     
 
 class NGFT_weighted(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
         
         self.train_retain_loader = train_retain_loader
         self.train_fgt_loader = train_fgt_loader
-        self.test_retain_loader = test_retain_loader
-        self.test_fgt_loader = test_fgt_loader
+        self.val_retain_loader = val_retain_loader
+        self.val_fgt_loader = val_fgt_loader
         self.retainfull_loader_real = retainfull_loader_real
         self.forgetfull_loader_real = forgetfull_loader_real
         self.class_to_remove = class_to_remove
@@ -770,7 +770,7 @@ class NGFT_weighted(BaseMethod):
         zero_acc_fgt_counter = 0
         zero_acc_patience = 1000
         patience = opt.patience
-        a_or_value = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+        a_or_value = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
         forget_loader = cycle(self.train_fgt_loader)
 
         retain_count = count_samples(self.train_retain_loader)
@@ -814,15 +814,15 @@ class NGFT_weighted(BaseMethod):
                 self.net.eval()
                 acc_train_ret = calculate_accuracy(self.net, self.train_retain_loader, use_fc_only=True)
                 acc_train_fgt = calculate_accuracy(self.net, self.train_fgt_loader, use_fc_only=True)
-                acc_test_val_ret = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
-                acc_test_val_fgt = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
-                acc_full_val_ret = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
-                acc_full_val_fgt = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
+                acc_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
+                acc_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+                full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
+                full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
 
                 self.net.train()
 
-                a_t = Complex(acc_test_val_ret, 0.0)
-                a_f = Complex(acc_test_val_fgt, 0.0)
+                a_t = Complex(acc_val_ret, 0.0)
+                a_f = Complex(acc_val_fgt, 0.0)
                 a_or = Complex(a_or_value, 0.0)
                 aus_result = AUS(a_t, a_or, a_f)
                 aus_value = aus_result.value
@@ -831,10 +831,10 @@ class NGFT_weighted(BaseMethod):
 
                 print(f"Train Retain Acc: {acc_train_ret:.3f},"
                       f"Train Forget Acc: {acc_train_fgt:.3f},"
-                      f"Val Retain Test Acc: {acc_test_val_ret:.3f},"
-                      f"Val Forget Test Acc: {acc_test_val_fgt:.3f},"
-                      f"Val Retain Full Acc: {acc_full_val_ret:.3f},"
-                      f"Val Forget Full Acc: {acc_full_val_fgt:.3f},"
+                      f"Val Retain Acc: {acc_val_ret:.3f},"
+                      f"Val Forget Acc: {acc_val_fgt:.3f},"
+                      f"Full Retain Acc: {full_retain_acc:.3f},"
+                      f"Full Forget Acc: {full_fgt_acc:.3f},"
                       f"target Acc: {self.target_accuracy:.3f},"
                       f"AUS: {aus_value:.3f}±{aus_error:.4f}")
 
@@ -844,10 +844,10 @@ class NGFT_weighted(BaseMethod):
                     best_epoch = epoch
                     best_acc_train_ret = acc_train_ret
                     best_acc_train_fgt = acc_train_fgt
-                    best_acc_test_val_ret = acc_test_val_ret
-                    best_acc_test_val_fgt = acc_test_val_fgt
-                    best_acc_full_val_ret = acc_full_val_ret
-                    best_acc_full_val_fgt = acc_full_val_fgt
+                    best_acc_val_ret = acc_val_ret
+                    best_acc_val_fgt = acc_val_fgt
+                    best_full_retain_acc = full_retain_acc
+                    best_full_fgt_acc = full_fgt_acc
 
                     checkpoint_dir = f"checkpoints_main/{opt.dataset}/{opt.method}/samples_per_class_{opt.samples_per_class}"
                     os.makedirs(checkpoint_dir, exist_ok=True)
@@ -863,13 +863,13 @@ class NGFT_weighted(BaseMethod):
                     print(f"[Checkpoint Saved] Best model saved at epoch {epoch} with AUS={aus_value:.4f} to {checkpoint_path}")
 
 
-                if acc_test_val_fgt == 0.0:
+                if acc_val_fgt == 0.0:
                     zero_acc_fgt_counter += 1
                 else:
                     zero_acc_fgt_counter = 0
 
                 if zero_acc_fgt_counter >= zero_acc_patience:
-                    print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                    print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                     break
 
                 if len(aus_history) > patience:
@@ -890,10 +890,10 @@ class NGFT_weighted(BaseMethod):
                     epoch_times=duration,
                     train_retain_acc=round(acc_train_ret, 4),
                     train_fgt_acc=round(acc_train_fgt, 4),
-                    val_test_retain_acc=round(acc_test_val_ret, 4),
-                    val_test_fgt_acc=round(acc_test_val_fgt, 4),
-                    val_full_retain_acc=round(acc_full_val_ret, 4),
-                    val_full_fgt_acc=round(acc_full_val_fgt, 4),
+                    val_retain_acc=round(acc_val_ret, 4),
+                    val_fgt_acc=round(acc_val_fgt, 4),
+                    full_retain_acc=round(full_retain_acc, 4),
+                    full_fgt_acc=round(full_fgt_acc, 4),
                     AUS=round(aus_value, 4),
                     mode=opt.method,
                     dataset=opt.dataset,
@@ -912,10 +912,10 @@ class NGFT_weighted(BaseMethod):
             best_epoch=best_epoch,
             train_retain_acc=round(best_acc_train_ret, 4),
             train_fgt_acc=round(best_acc_train_fgt, 4),
-            val_test_retain_acc=round(best_acc_test_val_ret, 4),
-            val_test_fgt_acc=round(best_acc_test_val_fgt, 4),
-            val_full_retain_acc=round(best_acc_full_val_ret, 4),
-            val_full_fgt_acc=round(best_acc_full_val_fgt, 4),
+            val_retain_acc=round(best_acc_val_ret, 4),
+            val_fgt_acc=round(best_acc_val_fgt, 4),
+            full_retain_acc=round(best_full_retain_acc, 4),
+            full_fgt_acc=round(best_full_fgt_acc, 4),
             AUS=round(best_aus, 4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -935,8 +935,8 @@ class NGFT_weighted(BaseMethod):
 
 
 class SCAR(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
         self.class_to_remove = class_to_remove
         self.head_fc = get_classifier(self.net)
       
@@ -1126,17 +1126,17 @@ class SCAR(BaseMethod):
         else:
             th = .8
 
-        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_test_fgt == 0
+        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_val_fgt == 0
         zero_acc_patience = 1000    # Stop if this happens for 50+ consecutive epochs
         
         aus_history = []  
 
         best_results = None
         best_aus = float('-inf')  # Maximum AUS
-        best_retain_acc = float('-inf')  # Maximum retaintest_val_acc
-        best_forget_acc = float('inf')  # Minimum forgettest_val_acc
+        best_retain_acc = float('-inf')  # Maximum val_retain_acc
+        best_forget_acc = float('inf')  # Minimum val_fgt_acc
 
-        Aor = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+        Aor = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
         #print('Num batch forget: ',len(self.train_fgt_loader), 'Num batch retain: ',len(self.synthetic_retain_emb_loader))
 
         retain_count = count_samples(self.train_retain_loader)
@@ -1216,7 +1216,7 @@ class SCAR(BaseMethod):
 #                    with torch.no_grad():
 #                        self.net.eval()
 #                        if opt.mode=='CR':
-#                            curr_acc = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
+#                            curr_acc = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
 #                        self.net.train()
 #                        if curr_acc <= opt.target_accuracy and epoch>1:
 #                            flag_exit = True
@@ -1229,8 +1229,8 @@ class SCAR(BaseMethod):
             # evaluate accuracy on forget set every batch
             #with torch.no_grad():
             #    self.net.eval()
-            #    curr_acc = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
-            #    #test_acc=calculate_accuracy(self.net, self.test)
+            #    curr_acc = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+            #    #validation_acc=calculate_accuracy(self.net, self.val_retain_loader)
             #    self.net.train()
             #    print(f"AAcc forget: {curr_acc:.3f}, target is {opt.target_accuracy:.3f}")
             #    if curr_acc <= opt.target_accuracy and epoch>1:
@@ -1245,37 +1245,37 @@ class SCAR(BaseMethod):
             retain_accuracy = evaluate_embedding_accuracy(self.net.fc, self.train_retain_loader, opt.device)
             forget_accuracy = evaluate_embedding_accuracy(self.net.fc, self.train_fgt_loader, opt.device)
 
-            retainfull_val_acc = evaluate_embedding_accuracy(self.net.fc, self.retainfull_loader_real, opt.device)
-            forgetfull_val_acc = evaluate_embedding_accuracy(self.net.fc, self.forgetfull_loader_real, opt.device)
+            full_retain_acc = evaluate_embedding_accuracy(self.net.fc, self.retainfull_loader_real, opt.device)
+            full_fgt_acc = evaluate_embedding_accuracy(self.net.fc, self.forgetfull_loader_real, opt.device)
 
-            retaintest_val_acc = evaluate_embedding_accuracy(self.net.fc, self.test_retain_loader, opt.device)
-            forgettest_val_acc = evaluate_embedding_accuracy(self.net.fc, self.test_fgt_loader, opt.device)
+            val_retain_acc = evaluate_embedding_accuracy(self.net.fc, self.val_retain_loader, opt.device)
+            val_fgt_acc = evaluate_embedding_accuracy(self.net.fc, self.val_fgt_loader, opt.device)
             
 
-            AUS = calculate_AUS(forgettest_val_acc, retaintest_val_acc, Aor)  # Calculate AUS using the accuracies
+            AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
-            # wandb.log({"retainfull_val_acc": retainfull_val_acc, "forgetfull_val_acc": forgetfull_val_acc,
-            #            "retaintest_val_acc": retaintest_val_acc, "forgettest_val_acc": forgettest_val_acc, "AUS": AUS})
+            # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
+            #            "val_retain_acc": val_retain_acc, "val_fgt_acc": val_fgt_acc, "AUS": AUS})
 
             aus_history.append(AUS)
 
             print(f"Epoch {epoch+1}/{opt.epochs_unlearn} | "
                 f"Train Retain Acc: {retain_accuracy:.2f}% | Train Forget Acc: {forget_accuracy:.2f}% | "
-                f"Val Retain full Acc: {retainfull_val_acc:.2f}% | Val Forget full Acc: {forgetfull_val_acc:.2f}%  | "
-                f"Val Retain Test Acc: {retaintest_val_acc:.2f}% | Val Forget Test Acc: {forgettest_val_acc:.2f}% | "
+                f"Full Retain Acc: {full_retain_acc:.2f}% | Full Forget Acc: {full_fgt_acc:.2f}%  | "
+                f"Val Retain Acc: {val_retain_acc:.2f}% | Val Forget Acc: {val_fgt_acc:.2f}% | "
                 f"AUS: {AUS:.2f}"
                 )
 
             # Update the best result
             if AUS > best_aus or (
                 AUS == best_aus and (
-                    retaintest_val_acc > best_retain_acc or
-                    forgettest_val_acc < best_forget_acc
+                    val_retain_acc > best_retain_acc or
+                    val_fgt_acc < best_forget_acc
                 )
             ):
                 best_aus = max(best_aus, AUS)
-                best_retain_acc = max(best_retain_acc, retaintest_val_acc)
-                best_forget_acc = min(best_forget_acc, forgettest_val_acc)
+                best_retain_acc = max(best_retain_acc, val_retain_acc)
+                best_forget_acc = min(best_forget_acc, val_fgt_acc)
 
                 best_model_state = deepcopy(self.net.state_dict())
 
@@ -1298,20 +1298,20 @@ class SCAR(BaseMethod):
                     "Epoch": epoch + 1,
                     "Unlearning Train Retain Acc": round(retain_accuracy, 4),
                     "Unlearning Train Forget Acc": round(forget_accuracy, 4),
-                    "Unlearning Val Retain Full Acc": round(retainfull_val_acc, 4),
-                    "Unlearning Val Forget Full Acc": round(forgetfull_val_acc, 4),
-                    "Unlearning Val Retain Test Acc": round(retaintest_val_acc, 4),
-                    "Unlearning Val Forget Test Acc": round(forgettest_val_acc, 4),
+                    "Unlearning Full Retain Acc": round(full_retain_acc, 4),
+                    "Unlearning Full Forget Acc": round(full_fgt_acc, 4),
+                    "Unlearning Val Retain Acc": round(val_retain_acc, 4),
+                    "Unlearning Val Forget Acc": round(val_fgt_acc, 4),
                     "AUS": round(AUS, 4)
                 }
 
-            if forgettest_val_acc == 0.0:
+            if val_fgt_acc == 0.0:
                 zero_acc_fgt_counter += 1
             else:
                 zero_acc_fgt_counter = 0
 
             if zero_acc_fgt_counter >= zero_acc_patience:
-                print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                 break
 
 
@@ -1345,10 +1345,10 @@ class SCAR(BaseMethod):
                 epoch_times=duration,
                 train_retain_acc=round(retain_accuracy ,4),
                 train_fgt_acc=round(forget_accuracy ,4),
-                val_test_retain_acc=round(retaintest_val_acc ,4),
-                val_test_fgt_acc=round(forgettest_val_acc ,4),
-                val_full_retain_acc=round(retainfull_val_acc ,4),
-                val_full_fgt_acc=round(forgetfull_val_acc ,4),
+                val_retain_acc=round(val_retain_acc ,4),
+                val_fgt_acc=round(val_fgt_acc ,4),
+                full_retain_acc=round(full_retain_acc ,4),
+                full_fgt_acc=round(full_fgt_acc ,4),
                 AUS=round(AUS,4),
                 mode=opt.method,
                 dataset=opt.dataset,
@@ -1365,10 +1365,10 @@ class SCAR(BaseMethod):
             best_epoch=round(best_results["Epoch"],4),
             train_retain_acc=round(best_results["Unlearning Train Retain Acc"],4),
             train_fgt_acc=round(best_results["Unlearning Train Forget Acc"],4),
-            val_test_retain_acc=round(best_results["Unlearning Val Retain Test Acc"],4),
-            val_test_fgt_acc=round(best_results["Unlearning Val Forget Test Acc"],4),
-            val_full_retain_acc=round(best_results["Unlearning Val Retain Full Acc"],4),
-            val_full_fgt_acc=round(best_results["Unlearning Val Forget Full Acc"],4),
+            val_retain_acc=round(best_results["Unlearning Val Retain Acc"],4),
+            val_fgt_acc=round(best_results["Unlearning Val Forget Acc"],4),
+            full_retain_acc=round(best_results["Unlearning Full Retain Acc"],4),
+            full_fgt_acc=round(best_results["Unlearning Full Forget Acc"],4),
             AUS=round(best_results["AUS"],4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -1387,15 +1387,15 @@ class SCAR(BaseMethod):
 
 
 class BoundaryShrink(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader,
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader,
                  retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader,
-                         test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader,
+                         val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
         
         self.train_retain_loader = train_retain_loader
         self.train_fgt_loader = train_fgt_loader
-        self.test_retain_loader = test_retain_loader
-        self.test_fgt_loader = test_fgt_loader
+        self.val_retain_loader = val_retain_loader
+        self.val_fgt_loader = val_fgt_loader
         self.retainfull_loader_real = retainfull_loader_real
         self.forgetfull_loader_real = forgetfull_loader_real
         self.class_to_remove = class_to_remove
@@ -1409,17 +1409,17 @@ class BoundaryShrink(BaseMethod):
 
         set_classifier(self.net, unlearn_model_fc)
 
-        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_test_fgt == 0
+        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_val_fgt == 0
         zero_acc_patience = 1000    # Stop if this happens for 50+ consecutive epochs
         
         aus_history = []  
 
         best_results = None
         best_aus = float('-inf')  # Maximum AUS
-        best_retain_acc = float('-inf')  # Maximum retaintest_val_acc
-        best_forget_acc = float('inf')  # Minimum forgettest_val_acc
+        best_retain_acc = float('-inf')  # Maximum val_retain_acc
+        best_forget_acc = float('inf')  # Minimum val_fgt_acc
 
-        Aor = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+        Aor = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
         retain_count = count_samples(self.train_retain_loader)
         forget_count = count_samples(self.train_fgt_loader)
         total_count = retain_count + forget_count
@@ -1452,38 +1452,38 @@ class BoundaryShrink(BaseMethod):
             retain_accuracy = evaluate_embedding_accuracy(unlearn_model_fc, self.train_retain_loader, opt.device)
             forget_accuracy = evaluate_embedding_accuracy(unlearn_model_fc, self.train_fgt_loader, opt.device)
 
-            retainfull_val_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.retainfull_loader_real, opt.device)
-            forgetfull_val_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.forgetfull_loader_real, opt.device)
+            full_retain_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.retainfull_loader_real, opt.device)
+            full_fgt_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.forgetfull_loader_real, opt.device)
 
-            retaintest_val_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.test_retain_loader, opt.device)
-            forgettest_val_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.test_fgt_loader, opt.device)
+            val_retain_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.val_retain_loader, opt.device)
+            val_fgt_acc = evaluate_embedding_accuracy(unlearn_model_fc, self.val_fgt_loader, opt.device)
             
 
-            AUS = calculate_AUS(forgettest_val_acc, retaintest_val_acc, Aor)  # Calculate AUS using the accuracies
+            AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
-            # wandb.log({"retainfull_val_acc": retainfull_val_acc, "forgetfull_val_acc": forgetfull_val_acc,
-            #            "retaintest_val_acc": retaintest_val_acc, "forgettest_val_acc": forgettest_val_acc, "AUS": AUS})
+            # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
+            #            "val_retain_acc": val_retain_acc, "val_fgt_acc": val_fgt_acc, "AUS": AUS})
 
             aus_history.append(AUS)
 
             print(f"Epoch {epoch+1}/{opt.epochs_unlearn} | "
                 f"Loss: {loss.item():.4f} | "
                 f"Train Retain Acc: {retain_accuracy:.2f}% | Train Forget Acc: {forget_accuracy:.2f}% | "
-                f"Val Retain full Acc: {retainfull_val_acc:.2f}% | Val Forget full Acc: {forgetfull_val_acc:.2f}%  | "
-                f"Val Retain Test Acc: {retaintest_val_acc:.2f}% | Val Forget Test Acc: {forgettest_val_acc:.2f}% | "
+                f"Full Retain Acc: {full_retain_acc:.2f}% | Full Forget Acc: {full_fgt_acc:.2f}%  | "
+                f"Val Retain Acc: {val_retain_acc:.2f}% | Val Forget Acc: {val_fgt_acc:.2f}% | "
                 f"AUS: {AUS:.2f}"
                 )
 
             # Update the best result
             if AUS > best_aus or (
                 AUS == best_aus and (
-                    retaintest_val_acc > best_retain_acc or
-                    forgettest_val_acc < best_forget_acc
+                    val_retain_acc > best_retain_acc or
+                    val_fgt_acc < best_forget_acc
                 )
             ):
                 best_aus = max(best_aus, AUS)
-                best_retain_acc = max(best_retain_acc, retaintest_val_acc)
-                best_forget_acc = min(best_forget_acc, forgettest_val_acc)
+                best_retain_acc = max(best_retain_acc, val_retain_acc)
+                best_forget_acc = min(best_forget_acc, val_fgt_acc)
 
                 best_model_state = deepcopy(self.net.state_dict())
 
@@ -1506,20 +1506,20 @@ class BoundaryShrink(BaseMethod):
                     "Loss": round(loss.item(), 4),
                     "Unlearning Train Retain Acc": round(retain_accuracy, 4),
                     "Unlearning Train Forget Acc": round(forget_accuracy, 4),
-                    "Unlearning Val Retain Full Acc": round(retainfull_val_acc, 4),
-                    "Unlearning Val Forget Full Acc": round(forgetfull_val_acc, 4),
-                    "Unlearning Val Retain Test Acc": round(retaintest_val_acc, 4),
-                    "Unlearning Val Forget Test Acc": round(forgettest_val_acc, 4),
+                    "Unlearning Full Retain Acc": round(full_retain_acc, 4),
+                    "Unlearning Full Forget Acc": round(full_fgt_acc, 4),
+                    "Unlearning Val Retain Acc": round(val_retain_acc, 4),
+                    "Unlearning Val Forget Acc": round(val_fgt_acc, 4),
                     "AUS": round(AUS, 4)
                 }
 
-            if forgettest_val_acc == 0.0:
+            if val_fgt_acc == 0.0:
                 zero_acc_fgt_counter += 1
             else:
                 zero_acc_fgt_counter = 0
 
             if zero_acc_fgt_counter >= zero_acc_patience:
-                print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                 break
 
 
@@ -1553,10 +1553,10 @@ class BoundaryShrink(BaseMethod):
                 epoch_times=duration,
                 train_retain_acc=round(retain_accuracy,4),
                 train_fgt_acc=round(forget_accuracy,4),
-                val_test_retain_acc=round(retaintest_val_acc,4),
-                val_test_fgt_acc=round(forgettest_val_acc,4),
-                val_full_retain_acc=round(retainfull_val_acc,4),
-                val_full_fgt_acc=round(forgetfull_val_acc,4),
+                val_retain_acc=round(val_retain_acc,4),
+                val_fgt_acc=round(val_fgt_acc,4),
+                full_retain_acc=round(full_retain_acc,4),
+                full_fgt_acc=round(full_fgt_acc,4),
                 AUS=round(AUS,4),
                 mode=opt.method,
                 dataset=opt.dataset,
@@ -1574,10 +1574,10 @@ class BoundaryShrink(BaseMethod):
             best_epoch=round(best_results["Epoch"],4),
             train_retain_acc=round(best_results["Unlearning Train Retain Acc"],4),
             train_fgt_acc=round(best_results["Unlearning Train Forget Acc"],4),
-            val_test_retain_acc=round(best_results["Unlearning Val Retain Test Acc"],4),
-            val_test_fgt_acc=round(best_results["Unlearning Val Forget Test Acc"],4),
-            val_full_retain_acc=round(best_results["Unlearning Val Retain Full Acc"],4),
-            val_full_fgt_acc=round(best_results["Unlearning Val Forget Full Acc"],4),
+            val_retain_acc=round(best_results["Unlearning Val Retain Acc"],4),
+            val_fgt_acc=round(best_results["Unlearning Val Forget Acc"],4),
+            full_retain_acc=round(best_results["Unlearning Full Retain Acc"],4),
+            full_fgt_acc=round(best_results["Unlearning Full Forget Acc"],4),
             AUS=round(best_results["AUS"],4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -1598,15 +1598,15 @@ class BoundaryShrink(BaseMethod):
 
 
 class BoundaryExpanding(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader,
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader,
                  retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader,
-                         test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader,
+                         val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
 
         self.train_retain_loader = train_retain_loader
         self.train_fgt_loader = train_fgt_loader
-        self.test_retain_loader = test_retain_loader
-        self.test_fgt_loader = test_fgt_loader
+        self.val_retain_loader = val_retain_loader
+        self.val_fgt_loader = val_fgt_loader
         self.retainfull_loader_real = retainfull_loader_real
         self.forgetfull_loader_real = forgetfull_loader_real
         self.class_to_remove = class_to_remove
@@ -1642,18 +1642,18 @@ class BoundaryExpanding(BaseMethod):
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(widen_model.parameters(), lr=opt.lr_unlearn, momentum=0.9)
             
-        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_test_fgt == 0
+        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_val_fgt == 0
         zero_acc_patience = 1000    # Stop if this happens for 50+ consecutive epochs
         
         aus_history = []  
 
         best_results = None
         best_aus = float('-inf')  # Maximum AUS
-        best_retain_acc = float('-inf')  # Maximum retaintest_val_acc
-        best_forget_acc = float('inf')  # Minimum forgettest_val_acc
+        best_retain_acc = float('-inf')  # Maximum val_retain_acc
+        best_forget_acc = float('inf')  # Minimum val_fgt_acc
         best_widen_state = None
         
-        Aor = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+        Aor = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
 
         retain_count = count_samples(self.train_retain_loader)
         forget_count = count_samples(self.train_fgt_loader)
@@ -1682,25 +1682,25 @@ class BoundaryExpanding(BaseMethod):
             retain_accuracy = evaluate_embedding_accuracy(widen_model, self.train_retain_loader, opt.device)
             forget_accuracy = evaluate_embedding_accuracy(widen_model, self.train_fgt_loader, opt.device)
 
-            retainfull_val_acc = evaluate_embedding_accuracy(widen_model, self.retainfull_loader_real, opt.device)
-            forgetfull_val_acc = evaluate_embedding_accuracy(widen_model, self.forgetfull_loader_real, opt.device)
+            full_retain_acc = evaluate_embedding_accuracy(widen_model, self.retainfull_loader_real, opt.device)
+            full_fgt_acc = evaluate_embedding_accuracy(widen_model, self.forgetfull_loader_real, opt.device)
 
-            retaintest_val_acc = evaluate_embedding_accuracy(widen_model, self.test_retain_loader, opt.device)
-            forgettest_val_acc = evaluate_embedding_accuracy(widen_model, self.test_fgt_loader, opt.device)
+            val_retain_acc = evaluate_embedding_accuracy(widen_model, self.val_retain_loader, opt.device)
+            val_fgt_acc = evaluate_embedding_accuracy(widen_model, self.val_fgt_loader, opt.device)
             
 
-            AUS = calculate_AUS(forgettest_val_acc, retaintest_val_acc, Aor)  # Calculate AUS using the accuracies
+            AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
-            # wandb.log({"retainfull_val_acc": retainfull_val_acc, "forgetfull_val_acc": forgetfull_val_acc,
-            #            "retaintest_val_acc": retaintest_val_acc, "forgettest_val_acc": forgettest_val_acc, "AUS": AUS})
+            # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
+            #            "val_retain_acc": val_retain_acc, "val_fgt_acc": val_fgt_acc, "AUS": AUS})
 
             aus_history.append(AUS)
 
             print(f"Epoch {epoch+1}/{opt.epochs_unlearn} | "
                 f"Loss: {loss.item():.4f} | "
                 f"Train Retain Acc: {retain_accuracy:.2f}% | Train Forget Acc: {forget_accuracy:.2f}% | "
-                f"Val Retain full Acc: {retainfull_val_acc:.2f}% | Val Forget full Acc: {forgetfull_val_acc:.2f}%  | "
-                f"Val Retain Test Acc: {retaintest_val_acc:.2f}% | Val Forget Test Acc: {forgettest_val_acc:.2f}% | "
+                f"Full Retain Acc: {full_retain_acc:.2f}% | Full Forget Acc: {full_fgt_acc:.2f}%  | "
+                f"Val Retain Acc: {val_retain_acc:.2f}% | Val Forget Acc: {val_fgt_acc:.2f}% | "
                 f"AUS: {AUS:.2f}"
                 )
 
@@ -1721,13 +1721,13 @@ class BoundaryExpanding(BaseMethod):
             # Update the best result
             if AUS > best_aus or (
                 AUS == best_aus and (
-                    retaintest_val_acc > best_retain_acc or
-                    forgettest_val_acc < best_forget_acc
+                    val_retain_acc > best_retain_acc or
+                    val_fgt_acc < best_forget_acc
                 )
             ):
                 best_aus = max(best_aus, AUS)
-                best_retain_acc = max(best_retain_acc, retaintest_val_acc)
-                best_forget_acc = min(best_forget_acc, forgettest_val_acc)
+                best_retain_acc = max(best_retain_acc, val_retain_acc)
+                best_forget_acc = min(best_forget_acc, val_fgt_acc)
                 best_widen_state = deepcopy(widen_model.state_dict())
 
                 with torch.no_grad():
@@ -1772,20 +1772,20 @@ class BoundaryExpanding(BaseMethod):
                         "Loss": round(loss.item(), 4),
                         "Unlearning Train Retain Acc": round(retain_accuracy, 4),
                         "Unlearning Train Forget Acc": round(forget_accuracy, 4),
-                        "Unlearning Val Retain Full Acc": round(retainfull_val_acc, 4),
-                        "Unlearning Val Forget Full Acc": round(forgetfull_val_acc, 4),
-                        "Unlearning Val Retain Test Acc": round(retaintest_val_acc, 4),
-                        "Unlearning Val Forget Test Acc": round(forgettest_val_acc, 4),
+                        "Unlearning Full Retain Acc": round(full_retain_acc, 4),
+                        "Unlearning Full Forget Acc": round(full_fgt_acc, 4),
+                        "Unlearning Val Retain Acc": round(val_retain_acc, 4),
+                        "Unlearning Val Forget Acc": round(val_fgt_acc, 4),
                         "AUS": round(AUS, 4)
                     }
 
-            if forgettest_val_acc == 0.0:
+            if val_fgt_acc == 0.0:
                 zero_acc_fgt_counter += 1
             else:
                 zero_acc_fgt_counter = 0
 
             if zero_acc_fgt_counter >= zero_acc_patience:
-                print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                 break
 
 
@@ -1818,10 +1818,10 @@ class BoundaryExpanding(BaseMethod):
                 epoch_times=duration,
                 train_retain_acc=round(retain_accuracy,4),
                 train_fgt_acc=round(forget_accuracy,4),
-                val_test_retain_acc=round(retaintest_val_acc,4),
-                val_test_fgt_acc=round(forgettest_val_acc,4),
-                val_full_retain_acc=round(retainfull_val_acc,4),
-                val_full_fgt_acc=round(forgetfull_val_acc,4),
+                val_retain_acc=round(val_retain_acc,4),
+                val_fgt_acc=round(val_fgt_acc,4),
+                full_retain_acc=round(full_retain_acc,4),
+                full_fgt_acc=round(full_fgt_acc,4),
                 AUS=round(AUS,4),
                 mode=opt.method,
                 dataset=opt.dataset,
@@ -1838,10 +1838,10 @@ class BoundaryExpanding(BaseMethod):
             best_epoch=round(best_results["Epoch"],4),
             train_retain_acc=round(best_results["Unlearning Train Retain Acc"],4),
             train_fgt_acc=round(best_results["Unlearning Train Forget Acc"],4),
-            val_test_retain_acc=round(best_results["Unlearning Val Retain Test Acc"],4),
-            val_test_fgt_acc=round(best_results["Unlearning Val Forget Test Acc"],4),
-            val_full_retain_acc=round(best_results["Unlearning Val Retain Full Acc"],4),
-            val_full_fgt_acc=round(best_results["Unlearning Val Forget Full Acc"],4),
+            val_retain_acc=round(best_results["Unlearning Val Retain Acc"],4),
+            val_fgt_acc=round(best_results["Unlearning Val Forget Acc"],4),
+            full_retain_acc=round(best_results["Unlearning Full Retain Acc"],4),
+            full_fgt_acc=round(best_results["Unlearning Full Forget Acc"],4),
             AUS=round(best_results["AUS"],4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -1870,9 +1870,9 @@ class BoundaryExpanding(BaseMethod):
         return self.net
 
 class SCRUB(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
         
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)        
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
 
         self.teacher = deepcopy(net).to(opt.device).eval()
         for p in self.teacher.parameters():
@@ -1897,8 +1897,8 @@ class SCRUB(BaseMethod):
             return loss_kd
 
   
-        # Compute Aor from original model (accuracy on retain test set)
-        Aor = calculate_accuracy(self.teacher, self.test_retain_loader, use_fc_only=True)
+        # Compute Aor from original model (accuracy on retain validation set)
+        Aor = calculate_accuracy(self.teacher, self.val_retain_loader, use_fc_only=True)
 
         # Load all features/labels from loaders
         def flatten_loader(loader):
@@ -1913,8 +1913,8 @@ class SCRUB(BaseMethod):
 
         retainfull_loader_val=self.retainfull_loader_real
         forgetfull_loader_val=self.forgetfull_loader_real
-        retaintest_loader_val=self.test_retain_loader
-        forgettest_loader_val=self.test_fgt_loader
+        val_retain_loader=self.val_retain_loader
+        val_fgt_loader=self.val_fgt_loader
         alpha=0.45
         gamma=0.45
         betha=0.1
@@ -1939,7 +1939,7 @@ class SCRUB(BaseMethod):
         for name, param in student_fc.named_parameters():
             print(f"student {name}: requires_grad={param.requires_grad}")
 
-        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_test_fgt == 0
+        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_val_fgt == 0
         zero_acc_patience = 1000    # Stop if this happens for 50+ consecutive epochs
         
         results = []
@@ -1947,8 +1947,8 @@ class SCRUB(BaseMethod):
 
         best_results = None
         best_aus = float('-inf')  # Maximum AUS
-        best_retain_acc = float('-inf')  # Maximum retaintest_val_acc
-        best_forget_acc = float('inf')  # Minimum forgettest_val_acc
+        best_retain_acc = float('-inf')  # Maximum val_retain_acc
+        best_forget_acc = float('inf')  # Minimum val_fgt_acc
         
         # Evaluate student model before training (Epoch 0)
         student_fc.eval()
@@ -1956,18 +1956,18 @@ class SCRUB(BaseMethod):
         retain_accuracy = evaluate_embedding_accuracy(student_fc, retain_synth_loader_train, opt.device)
         forget_accuracy = evaluate_embedding_accuracy(student_fc, forget_synth_loader_train, opt.device)
 
-        retainfull_val_acc = evaluate_embedding_accuracy(student_fc, retainfull_loader_val, opt.device)
-        forgetfull_val_acc = evaluate_embedding_accuracy(student_fc, forgetfull_loader_val, opt.device)
+        full_retain_acc = evaluate_embedding_accuracy(student_fc, retainfull_loader_val, opt.device)
+        full_fgt_acc = evaluate_embedding_accuracy(student_fc, forgetfull_loader_val, opt.device)
 
-        retaintest_val_acc = evaluate_embedding_accuracy(student_fc, retaintest_loader_val, opt.device)
-        forgettest_val_acc = evaluate_embedding_accuracy(student_fc, forgettest_loader_val, opt.device)
+        val_retain_acc = evaluate_embedding_accuracy(student_fc, val_retain_loader, opt.device)
+        val_fgt_acc = evaluate_embedding_accuracy(student_fc, val_fgt_loader, opt.device)
 
-        AUS = calculate_AUS(forgettest_val_acc, retaintest_val_acc, Aor)
+        AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)
 
         print(f"Epoch 0 (Before Training) | "
             f"Train Retain Acc: {retain_accuracy:.2f}% | Train Forget Acc: {forget_accuracy:.2f}% | "
-            f"Val Retain Full Acc: {retainfull_val_acc:.2f}% | Val Forget Full Acc: {forgetfull_val_acc:.2f}% | "
-            f"Val Retain Test Acc: {retaintest_val_acc:.2f}% | Val Forget Test Acc: {forgettest_val_acc:.2f}% | "
+            f"Full Retain Acc: {full_retain_acc:.2f}% | Full Forget Acc: {full_fgt_acc:.2f}% | "
+            f"Val Retain Acc: {val_retain_acc:.2f}% | Val Forget Acc: {val_fgt_acc:.2f}% | "
             f"AUS: {AUS:.2f}"
         )
 
@@ -1981,10 +1981,10 @@ class SCRUB(BaseMethod):
             "Unlearning Forget KD Loss": None,
             "Unlearning Train Retain Acc": round(retain_accuracy, 4),
             "Unlearning Train Forget Acc": round(forget_accuracy, 4),
-            "Unlearning Val Retain Full Acc": round(retainfull_val_acc, 4),
-            "Unlearning Val Forget Full Acc": round(forgetfull_val_acc, 4),
-            "Unlearning Val Retain Test Acc": round(retaintest_val_acc, 4),
-            "Unlearning Val Forget Test Acc": round(forgettest_val_acc, 4),
+            "Unlearning Full Retain Acc": round(full_retain_acc, 4),
+            "Unlearning Full Forget Acc": round(full_fgt_acc, 4),
+            "Unlearning Val Retain Acc": round(val_retain_acc, 4),
+            "Unlearning Val Forget Acc": round(val_fgt_acc, 4),
             "AUS": round(AUS, 4)
         })
 
@@ -2032,16 +2032,16 @@ class SCRUB(BaseMethod):
             retain_accuracy = evaluate_embedding_accuracy(student_fc, retain_synth_loader_train, opt.device)
             forget_accuracy = evaluate_embedding_accuracy(student_fc, forget_synth_loader_train, opt.device)
 
-            retainfull_val_acc = evaluate_embedding_accuracy(student_fc, retainfull_loader_val, opt.device)
-            forgetfull_val_acc = evaluate_embedding_accuracy(student_fc, forgetfull_loader_val, opt.device)
+            full_retain_acc = evaluate_embedding_accuracy(student_fc, retainfull_loader_val, opt.device)
+            full_fgt_acc = evaluate_embedding_accuracy(student_fc, forgetfull_loader_val, opt.device)
 
-            retaintest_val_acc = evaluate_embedding_accuracy(student_fc, retaintest_loader_val, opt.device)
-            forgettest_val_acc = evaluate_embedding_accuracy(student_fc, forgettest_loader_val, opt.device)
+            val_retain_acc = evaluate_embedding_accuracy(student_fc, val_retain_loader, opt.device)
+            val_fgt_acc = evaluate_embedding_accuracy(student_fc, val_fgt_loader, opt.device)
             
-            AUS = calculate_AUS(forgettest_val_acc, retaintest_val_acc, Aor)  # Calculate AUS using the accuracies
+            AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
-            # wandb.log({"retainfull_val_acc": retainfull_val_acc, "forgetfull_val_acc": forgetfull_val_acc,
-            #            "retaintest_val_acc": retaintest_val_acc, "forgettest_val_acc": forgettest_val_acc, "AUS": AUS})
+            # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
+            #            "val_retain_acc": val_retain_acc, "val_fgt_acc": val_fgt_acc, "AUS": AUS})
 
             aus_history.append(AUS)
 
@@ -2064,21 +2064,21 @@ class SCRUB(BaseMethod):
                 f"Retain CE Loss: {loss_ce_retain.item():.4f} | Forget CE Loss: {loss_ce_forget.item():.4f} | "
                 f"Retain KD Loss: {loss_kd_retain.item():.4f} | Forget KD Loss: {loss_kd_forget.item():.4f} | "
                 f"Train Retain Acc: {retain_accuracy:.2f}% | Train Forget Acc: {forget_accuracy:.2f}% | "
-                f"Val Retain full Acc: {retainfull_val_acc:.2f}% | Val Forget full Acc: {forgetfull_val_acc:.2f}%  | "
-                f"Val Retain Test Acc: {retaintest_val_acc:.2f}% | Val Forget Test Acc: {forgettest_val_acc:.2f}% | "
+                f"Full Retain Acc: {full_retain_acc:.2f}% | Full Forget Acc: {full_fgt_acc:.2f}%  | "
+                f"Val Retain Acc: {val_retain_acc:.2f}% | Val Forget Acc: {val_fgt_acc:.2f}% | "
                 f"AUS: {AUS:.2f}"
                 )
 
             # Update the best result
             if AUS > best_aus or (
                 AUS == best_aus and (
-                    retaintest_val_acc > best_retain_acc or
-                    forgettest_val_acc < best_forget_acc
+                    val_retain_acc > best_retain_acc or
+                    val_fgt_acc < best_forget_acc
                 )
             ):
                 best_aus = max(best_aus, AUS)
-                best_retain_acc = max(best_retain_acc, retaintest_val_acc)
-                best_forget_acc = min(best_forget_acc, forgettest_val_acc)
+                best_retain_acc = max(best_retain_acc, val_retain_acc)
+                best_forget_acc = min(best_forget_acc, val_fgt_acc)
 
                 self.student.fc = student_fc
 
@@ -2106,20 +2106,20 @@ class SCRUB(BaseMethod):
                     "Unlearning Forget KD Loss": round(loss_kd_forget.item(), 4),
                     "Unlearning Train Retain Acc": round(retain_accuracy, 4),
                     "Unlearning Train Forget Acc": round(forget_accuracy, 4),
-                    "Unlearning Val Retain Full Acc": round(retainfull_val_acc, 4),
-                    "Unlearning Val Forget Full Acc": round(forgetfull_val_acc, 4),
-                    "Unlearning Val Retain Test Acc": round(retaintest_val_acc, 4),
-                    "Unlearning Val Forget Test Acc": round(forgettest_val_acc, 4),
+                    "Unlearning Full Retain Acc": round(full_retain_acc, 4),
+                    "Unlearning Full Forget Acc": round(full_fgt_acc, 4),
+                    "Unlearning Val Retain Acc": round(val_retain_acc, 4),
+                    "Unlearning Val Forget Acc": round(val_fgt_acc, 4),
                     "AUS": round(AUS, 4)
                 }
 
-            if forgettest_val_acc == 0.0:
+            if val_fgt_acc == 0.0:
                 zero_acc_fgt_counter += 1
             else:
                 zero_acc_fgt_counter = 0
 
             if zero_acc_fgt_counter >= zero_acc_patience:
-                print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                 break
 
 
@@ -2152,10 +2152,10 @@ class SCRUB(BaseMethod):
                 epoch_times=duration,
                 train_retain_acc=round(retain_accuracy,4),
                 train_fgt_acc=round(forget_accuracy,4),
-                val_test_retain_acc=round(retaintest_val_acc,4),
-                val_test_fgt_acc=round(forgettest_val_acc,4),
-                val_full_retain_acc=round(retainfull_val_acc,4),
-                val_full_fgt_acc=round(forgetfull_val_acc,4),
+                val_retain_acc=round(val_retain_acc,4),
+                val_fgt_acc=round(val_fgt_acc,4),
+                full_retain_acc=round(full_retain_acc,4),
+                full_fgt_acc=round(full_fgt_acc,4),
                 AUS=round(AUS,4),
                 mode=opt.method,
                 dataset=opt.dataset,
@@ -2173,10 +2173,10 @@ class SCRUB(BaseMethod):
             best_epoch=round(best_results["Epoch"],4),
             train_retain_acc=round(best_results["Unlearning Train Retain Acc"],4),
             train_fgt_acc=round(best_results["Unlearning Train Forget Acc"],4),
-            val_test_retain_acc=round(best_results["Unlearning Val Retain Test Acc"],4),
-            val_test_fgt_acc=round(best_results["Unlearning Val Forget Test Acc"],4),
-            val_full_retain_acc=round(best_results["Unlearning Val Retain Full Acc"],4),
-            val_full_fgt_acc=round(best_results["Unlearning Val Forget Full Acc"],4),
+            val_retain_acc=round(best_results["Unlearning Val Retain Acc"],4),
+            val_fgt_acc=round(best_results["Unlearning Val Forget Acc"],4),
+            full_retain_acc=round(best_results["Unlearning Full Retain Acc"],4),
+            full_fgt_acc=round(best_results["Unlearning Full Forget Acc"],4),
             AUS=round(best_results["AUS"],4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -2196,8 +2196,8 @@ class SCRUB(BaseMethod):
 
 
 class DUCK(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)        
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
         self.class_to_remove = class_to_remove
         self.head_fc = get_classifier(self.net)
     
@@ -2260,11 +2260,11 @@ class DUCK(BaseMethod):
         patience_counter = 0
         patience = opt.patience
         
-        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_test_fgt == 0
+        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_val_fgt == 0
         zero_acc_patience = 1000    # Stop if this happens for 50+ consecutive epochs
         
         aus_history = []
-        a_or_value = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+        a_or_value = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
 
         init = True
         all_closest_distribs = []
@@ -2328,14 +2328,14 @@ class DUCK(BaseMethod):
                 self.net.eval()
                 acc_train_ret = calculate_accuracy(self.net, self.train_retain_loader, use_fc_only=True)
                 acc_train_fgt = calculate_accuracy(self.net, self.train_fgt_loader, use_fc_only=True)
-                acc_test_val_ret = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
-                acc_test_val_fgt = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
-                acc_full_val_ret = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
-                acc_full_val_fgt = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
+                acc_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
+                acc_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+                full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
+                full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
 
 
-                a_t = Complex(acc_test_val_ret, 0.0)
-                a_f = Complex(acc_test_val_fgt, 0.0)
+                a_t = Complex(acc_val_ret, 0.0)
+                a_f = Complex(acc_val_fgt, 0.0)
                 a_or = Complex(a_or_value, 0.0)
 
                 aus_result = AUS(a_t, a_or, a_f)
@@ -2347,10 +2347,10 @@ class DUCK(BaseMethod):
                 self.net.train()
                 print(f"Train Retain Acc: {acc_train_ret:.3f},"
                       f"Train Forget Acc: {acc_train_fgt:.3f},"
-                      f"Val Retain Test Acc: {acc_test_val_ret:.3f},"
-                      f"Val Forget Test Acc: {acc_test_val_fgt:.3f},"
-                      f"Val Retain Full Acc: {acc_full_val_ret:.3f},"
-                      f"Val Forget Full Acc: {acc_full_val_fgt:.3f},"
+                      f"Val Retain Acc: {acc_val_ret:.3f},"
+                      f"Val Forget Acc: {acc_val_fgt:.3f},"
+                      f"Full Retain Acc: {full_retain_acc:.3f},"
+                      f"Full Forget Acc: {full_fgt_acc:.3f},"
                       f"target Acc: {self.target_accuracy:.3f},"
                       f"AUS: {aus_value:.3f}±{aus_error:.4f}")
 
@@ -2362,19 +2362,19 @@ class DUCK(BaseMethod):
 
                     best_acc_train_ret = acc_train_ret
                     best_acc_train_fgt = acc_train_fgt
-                    best_acc_test_val_ret = acc_test_val_ret
-                    best_acc_test_val_fgt = acc_test_val_fgt
-                    best_acc_full_val_ret = acc_full_val_ret
-                    best_acc_full_val_fgt = acc_full_val_fgt
+                    best_acc_val_ret = acc_val_ret
+                    best_acc_val_fgt = acc_val_fgt
+                    best_full_retain_acc = full_retain_acc
+                    best_full_fgt_acc = full_fgt_acc
                     
 
-                if acc_test_val_fgt == 0.0:
+                if acc_val_fgt == 0.0:
                     zero_acc_fgt_counter += 1
                 else:
                     zero_acc_fgt_counter = 0
 
                 if zero_acc_fgt_counter >= zero_acc_patience:
-                    print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                    print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                     break
     
                 if len(aus_history) > patience:
@@ -2407,10 +2407,10 @@ class DUCK(BaseMethod):
                     epoch_times=duration,
                     train_retain_acc=round(acc_train_ret, 4),
                     train_fgt_acc=round(acc_train_fgt, 4),
-                    val_test_retain_acc=round(acc_test_val_ret, 4),
-                    val_test_fgt_acc=round(acc_test_val_fgt, 4),
-                    val_full_retain_acc=round(acc_full_val_ret, 4),
-                    val_full_fgt_acc=round(acc_full_val_fgt, 4),
+                    val_retain_acc=round(acc_val_ret, 4),
+                    val_fgt_acc=round(acc_val_fgt, 4),
+                    full_retain_acc=round(full_retain_acc, 4),
+                    full_fgt_acc=round(full_fgt_acc, 4),
                     AUS=round(aus_value, 4),
                     mode=opt.method,
                     dataset=opt.dataset,
@@ -2431,10 +2431,10 @@ class DUCK(BaseMethod):
             best_epoch=best_epoch,
             train_retain_acc=round(best_acc_train_ret, 4),
             train_fgt_acc=round(best_acc_train_fgt, 4),
-            val_test_retain_acc=round(best_acc_test_val_ret, 4),
-            val_test_fgt_acc=round(best_acc_test_val_fgt, 4),
-            val_full_retain_acc=round(best_acc_full_val_ret, 4),
-            val_full_fgt_acc=round(best_acc_full_val_fgt, 4),
+            val_retain_acc=round(best_acc_val_ret, 4),
+            val_fgt_acc=round(best_acc_val_fgt, 4),
+            full_retain_acc=round(best_full_retain_acc, 4),
+            full_fgt_acc=round(best_full_fgt_acc, 4),
             AUS=round(best_aus, 4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -2454,8 +2454,8 @@ class DUCK(BaseMethod):
 
 
 class RetrainedEmbedding(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
 
         head = get_classifier(net)
         final_linear = None
@@ -2498,17 +2498,17 @@ class RetrainedEmbedding(BaseMethod):
         best_train_loss = 0.0
         best_val_loss = 0.0
 
-        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_test_fgt == 0
+        zero_acc_fgt_counter = 0  # Track consecutive epochs with acc_val_fgt == 0
         zero_acc_patience = 1000    # Stop if this happens for 50+ consecutive epochs
         
         aus_history = []  
 
         best_results = None
         best_aus = float('-inf')  # Maximum AUS
-        best_retain_acc = float('-inf')  # Maximum retaintest_val_acc
-        best_forget_acc = float('inf')  # Minimum forgettest_val_acc
+        best_retain_acc = float('-inf')  # Maximum val_retain_acc
+        best_forget_acc = float('inf')  # Minimum val_fgt_acc
 
-        Aor = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+        Aor = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
 
         retain_count = count_samples(self.train_retain_loader)
         forget_count = count_samples(self.train_fgt_loader)
@@ -2544,7 +2544,7 @@ class RetrainedEmbedding(BaseMethod):
             #train_acc = 100. * correct / total
             self.scheduler.step()
 
-            #val_acc, val_loss = self.evaluate(self.test_retain_loader)
+            #val_acc, val_loss = self.evaluate(self.val_retain_loader)
 
             ## Save best model
             #if val_acc > best_acc:
@@ -2568,37 +2568,37 @@ class RetrainedEmbedding(BaseMethod):
             retain_accuracy = evaluate_embedding_accuracy(self.fc_layer, self.train_retain_loader, opt.device)
             forget_accuracy = evaluate_embedding_accuracy(self.fc_layer, self.train_fgt_loader, opt.device)
 
-            retainfull_val_acc = evaluate_embedding_accuracy(self.fc_layer, self.retainfull_loader_real, opt.device)
-            forgetfull_val_acc = evaluate_embedding_accuracy(self.fc_layer, self.forgetfull_loader_real, opt.device)
+            full_retain_acc = evaluate_embedding_accuracy(self.fc_layer, self.retainfull_loader_real, opt.device)
+            full_fgt_acc = evaluate_embedding_accuracy(self.fc_layer, self.forgetfull_loader_real, opt.device)
 
-            retaintest_val_acc = evaluate_embedding_accuracy(self.fc_layer, self.test_retain_loader, opt.device)
-            forgettest_val_acc = evaluate_embedding_accuracy(self.fc_layer, self.test_fgt_loader, opt.device)
+            val_retain_acc = evaluate_embedding_accuracy(self.fc_layer, self.val_retain_loader, opt.device)
+            val_fgt_acc = evaluate_embedding_accuracy(self.fc_layer, self.val_fgt_loader, opt.device)
             
-            AUS = calculate_AUS(forgettest_val_acc, retaintest_val_acc, Aor)  # Calculate AUS using the accuracies
+            AUS = calculate_AUS(val_fgt_acc, val_retain_acc, Aor)  # Calculate AUS using the accuracies
 
-            # wandb.log({"retainfull_val_acc": retainfull_val_acc, "forgetfull_val_acc": forgetfull_val_acc,
-            #            "retaintest_val_acc": retaintest_val_acc, "forgettest_val_acc": forgettest_val_acc, "AUS": AUS})
+            # wandb.log({"full_retain_acc": full_retain_acc, "full_fgt_acc": full_fgt_acc,
+            #            "val_retain_acc": val_retain_acc, "val_fgt_acc": val_fgt_acc, "AUS": AUS})
 
             aus_history.append(AUS)
 
             print(f"Epoch {epoch+1}/{opt.epochs_unlearn} | "
                 f"Loss: {loss.item():.4f} | "
                 f"Train Retain Acc: {retain_accuracy:.2f}% | Train Forget Acc: {forget_accuracy:.2f}% | "
-                f"Val Retain full Acc: {retainfull_val_acc:.2f}% | Val Forget full Acc: {forgetfull_val_acc:.2f}%  | "
-                f"Val Retain Test Acc: {retaintest_val_acc:.2f}% | Val Forget Test Acc: {forgettest_val_acc:.2f}% | "
+                f"Full Retain Acc: {full_retain_acc:.2f}% | Full Forget Acc: {full_fgt_acc:.2f}%  | "
+                f"Val Retain Acc: {val_retain_acc:.2f}% | Val Forget Acc: {val_fgt_acc:.2f}% | "
                 f"AUS: {AUS:.2f}"
                 )
 
             # Update the best result
             if AUS > best_aus or (
                 AUS == best_aus and (
-                    retaintest_val_acc > best_retain_acc or
-                    forgettest_val_acc < best_forget_acc
+                    val_retain_acc > best_retain_acc or
+                    val_fgt_acc < best_forget_acc
                 )
             ):
                 best_aus = max(best_aus, AUS)
-                best_retain_acc = max(best_retain_acc, retaintest_val_acc)
-                best_forget_acc = min(best_forget_acc, forgettest_val_acc)
+                best_retain_acc = max(best_retain_acc, val_retain_acc)
+                best_forget_acc = min(best_forget_acc, val_fgt_acc)
                 
                 self.net.fc = self.fc_layer
                 best_model_state = deepcopy(self.net.state_dict())
@@ -2620,20 +2620,20 @@ class RetrainedEmbedding(BaseMethod):
                     "Loss": round(loss.item(), 4),
                     "Unlearning Train Retain Acc": round(retain_accuracy, 4),
                     "Unlearning Train Forget Acc": round(forget_accuracy, 4),
-                    "Unlearning Val Retain Full Acc": round(retainfull_val_acc, 4),
-                    "Unlearning Val Forget Full Acc": round(forgetfull_val_acc, 4),
-                    "Unlearning Val Retain Test Acc": round(retaintest_val_acc, 4),
-                    "Unlearning Val Forget Test Acc": round(forgettest_val_acc, 4),
+                    "Unlearning Full Retain Acc": round(full_retain_acc, 4),
+                    "Unlearning Full Forget Acc": round(full_fgt_acc, 4),
+                    "Unlearning Val Retain Acc": round(val_retain_acc, 4),
+                    "Unlearning Val Forget Acc": round(val_fgt_acc, 4),
                     "AUS": round(AUS, 4)
                 }
 
-            if forgettest_val_acc == 0.0:
+            if val_fgt_acc == 0.0:
                 zero_acc_fgt_counter += 1
             else:
                 zero_acc_fgt_counter = 0
 
             if zero_acc_fgt_counter >= zero_acc_patience:
-                print(f"[Early Stopping] acc_test_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
+                print(f"[Early Stopping] acc_val_fgt was 0 for {zero_acc_patience} consecutive epochs. Stopping...")
                 break
 
             if len(aus_history) > opt.patience:
@@ -2656,10 +2656,10 @@ class RetrainedEmbedding(BaseMethod):
                 epoch_times=duration,
                 train_retain_acc=round(retain_accuracy,4),
                 train_fgt_acc=round(forget_accuracy,4),
-                val_test_retain_acc=round(retaintest_val_acc,4),
-                val_test_fgt_acc=round(forgettest_val_acc,4),
-                val_full_retain_acc=round(retainfull_val_acc,4),
-                val_full_fgt_acc=round(forgetfull_val_acc,4),
+                val_retain_acc=round(val_retain_acc,4),
+                val_fgt_acc=round(val_fgt_acc,4),
+                full_retain_acc=round(full_retain_acc,4),
+                full_fgt_acc=round(full_fgt_acc,4),
                 AUS=round(AUS,4),
                 mode=opt.method,
                 dataset=opt.dataset,
@@ -2676,10 +2676,10 @@ class RetrainedEmbedding(BaseMethod):
             best_epoch=round(best_results["Epoch"],4),
             train_retain_acc=round(best_results["Unlearning Train Retain Acc"],4),
             train_fgt_acc=round(best_results["Unlearning Train Forget Acc"],4),
-            val_test_retain_acc=round(best_results["Unlearning Val Retain Test Acc"],4),
-            val_test_fgt_acc=round(best_results["Unlearning Val Forget Test Acc"],4),
-            val_full_retain_acc=round(best_results["Unlearning Val Retain Full Acc"],4),
-            val_full_fgt_acc=round(best_results["Unlearning Val Forget Full Acc"],4),
+            val_retain_acc=round(best_results["Unlearning Val Retain Acc"],4),
+            val_fgt_acc=round(best_results["Unlearning Val Forget Acc"],4),
+            full_retain_acc=round(best_results["Unlearning Full Retain Acc"],4),
+            full_fgt_acc=round(best_results["Unlearning Full Forget Acc"],4),
             AUS=round(best_results["AUS"],4),
             mode=opt.method,
             dataset=opt.dataset,
@@ -2703,10 +2703,10 @@ class RetrainedEmbedding(BaseMethod):
     
 
 class BadTeacher(BaseMethod):
-    def __init__(self, net, train_retain_loader, train_fgt_loader, test_retain_loader, test_fgt_loader,
+    def __init__(self, net, train_retain_loader, train_fgt_loader, val_retain_loader, val_fgt_loader,
                  retainfull_loader_real, forgetfull_loader_real, class_to_remove=None):
-        super().__init__(net, train_retain_loader, train_fgt_loader, test_retain_loader,
-                         test_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
+        super().__init__(net, train_retain_loader, train_fgt_loader, val_retain_loader,
+                         val_fgt_loader, retainfull_loader_real, forgetfull_loader_real)
         self.class_to_remove = class_to_remove
         self.loader = self._create_combined_loader()
         self.full_teacher = deepcopy(self.net).eval()
@@ -2753,7 +2753,7 @@ class BadTeacher(BaseMethod):
         optimizer = torch.optim.SGD(self.net.parameters(), lr=opt.lr_unlearn, momentum=opt.momentum_unlearn, weight_decay=opt.wd_unlearn)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.epochs)
 
-        a_or_value = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+        a_or_value = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
         retain_count = count_samples(self.train_retain_loader)
         forget_count = count_samples(self.train_fgt_loader)
         total_count = retain_count + forget_count
@@ -2788,13 +2788,13 @@ class BadTeacher(BaseMethod):
                 self.net.eval()
                 acc_train_ret = calculate_accuracy(self.net, self.train_retain_loader, use_fc_only=True)
                 acc_train_fgt = calculate_accuracy(self.net, self.train_fgt_loader, use_fc_only=True)
-                acc_test_val_ret = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
-                acc_test_val_fgt = calculate_accuracy(self.net, self.test_fgt_loader, use_fc_only=True)
-                acc_full_val_ret = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
-                acc_full_val_fgt = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
+                acc_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
+                acc_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader, use_fc_only=True)
+                full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
+                full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
 
-                a_t = Complex(acc_test_val_ret, 0.0)
-                a_f = Complex(acc_test_val_fgt, 0.0)
+                a_t = Complex(acc_val_ret, 0.0)
+                a_f = Complex(acc_val_fgt, 0.0)
                 a_or = Complex(a_or_value, 0.0)
                 aus_value = AUS(a_t, a_or, a_f).value
 
@@ -2802,7 +2802,7 @@ class BadTeacher(BaseMethod):
                     best_aus = aus_value
                     best_model_state = deepcopy(self.net.state_dict())
                     best_epoch = epoch
-                    best_accs = (acc_train_ret, acc_train_fgt, acc_test_val_ret, acc_test_val_fgt, acc_full_val_ret, acc_full_val_fgt)
+                    best_accs = (acc_train_ret, acc_train_fgt, acc_val_ret, acc_val_fgt, full_retain_acc, full_fgt_acc)
 
                     checkpoint_dir = f"checkpoints_main/{opt.dataset}/{opt.method}/samples_per_class_{opt.samples_per_class}"
                     os.makedirs(checkpoint_dir, exist_ok=True)
@@ -2821,20 +2821,20 @@ class BadTeacher(BaseMethod):
                 print(f"Epoch {epoch+1}/{self.epochs} | "
                         f"Train Retain Acc: {acc_train_ret:.2f} | "
                         f"Train Forget Acc: {acc_train_fgt:.2f} | "
-                        f"Val Retain Test Acc: {acc_test_val_ret:.2f} | "
-                        f"Val Forget Test Acc: {acc_test_val_fgt:.2f} | "
-                        f"Val Retain Full Acc: {acc_full_val_ret:.2f} | "
-                        f"Val Forget Full Acc: {acc_full_val_fgt:.2f} | "
+                        f"Val Retain Acc: {acc_val_ret:.2f} | "
+                        f"Val Forget Acc: {acc_val_fgt:.2f} | "
+                        f"Full Retain Acc: {full_retain_acc:.2f} | "
+                        f"Full Forget Acc: {full_fgt_acc:.2f} | "
                         f"AUS: {aus_value:.4f}")
 
                 log_epoch_to_csv(epoch,
                                  duration,
                                  acc_train_ret,
                                  acc_train_fgt,
-                                 acc_test_val_ret,
-                                 acc_test_val_fgt,
-                                 acc_full_val_ret,
-                                 acc_full_val_fgt,
+                                 acc_val_ret,
+                                 acc_val_fgt,
+                                 full_retain_acc,
+                                 full_fgt_acc,
                                  aus_value,
                                  opt.method,
                                  opt.dataset,
@@ -2865,12 +2865,12 @@ class Delete(BaseMethod):
     """
     def __init__(self, net,
                  train_retain_loader, train_fgt_loader,
-                 test_retain_loader,  test_fgt_loader,
+                 val_retain_loader,  val_fgt_loader,
                  retainfull_loader_real, forgetfull_loader_real,
                  class_to_remove=None):
         super().__init__(net,
                          train_retain_loader, train_fgt_loader,
-                         test_retain_loader,  test_fgt_loader,
+                         val_retain_loader,  val_fgt_loader,
                          retainfull_loader_real, forgetfull_loader_real)
         self.class_to_remove = class_to_remove
 
@@ -2900,7 +2900,7 @@ class Delete(BaseMethod):
         self.scheduler = optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=self.epochs)
 
         # 3) Baseline retain accuracy for AUS
-        self.a_or_value = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
+        self.a_or_value = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
 
         # 4) Early-stop bookkeeping
         self.zero_acc_patience = 1000
@@ -2933,18 +2933,18 @@ class Delete(BaseMethod):
             self.net.eval()
             init_train_ret    = calculate_accuracy(self.net, self.train_retain_loader, use_fc_only=True)
             init_train_fgt    = calculate_accuracy(self.net, self.train_fgt_loader,   use_fc_only=True)
-            init_test_val_ret = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
-            init_test_val_fgt = calculate_accuracy(self.net, self.test_fgt_loader,    use_fc_only=True)
-            init_full_val_ret = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
-            init_full_val_fgt = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
+            init_val_ret = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
+            init_val_fgt = calculate_accuracy(self.net, self.val_fgt_loader,    use_fc_only=True)
+            init_full_retain_acc = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
+            init_full_fgt_acc = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
             self.net.train()
 
         best_acc_train_ret    = init_train_ret
         best_acc_train_fgt    = init_train_fgt
-        best_acc_test_val_ret = init_test_val_ret
-        best_acc_test_val_fgt = init_test_val_fgt
-        best_acc_full_val_ret = init_full_val_ret
-        best_acc_full_val_fgt = init_full_val_fgt
+        best_acc_val_ret = init_val_ret
+        best_acc_val_fgt = init_val_fgt
+        best_full_retain_acc = init_full_retain_acc
+        best_full_fgt_acc = init_full_fgt_acc
 
         retain_count = count_samples(self.train_retain_loader)
         forget_count = count_samples(self.train_fgt_loader)
@@ -2989,22 +2989,22 @@ class Delete(BaseMethod):
                 self.net.eval()
                 acc_train_ret     = calculate_accuracy(self.net, self.train_retain_loader, use_fc_only=True)
                 acc_train_fgt     = calculate_accuracy(self.net, self.train_fgt_loader,   use_fc_only=True)
-                acc_test_val_ret  = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
-                acc_test_val_fgt  = calculate_accuracy(self.net, self.test_fgt_loader,    use_fc_only=True)
-                acc_full_val_ret  = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
-                acc_full_val_fgt  = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
+                acc_val_ret  = calculate_accuracy(self.net, self.val_retain_loader, use_fc_only=True)
+                acc_val_fgt  = calculate_accuracy(self.net, self.val_fgt_loader,    use_fc_only=True)
+                full_retain_acc  = calculate_accuracy(self.net, self.retainfull_loader_real, use_fc_only=True)
+                full_fgt_acc  = calculate_accuracy(self.net, self.forgetfull_loader_real, use_fc_only=True)
                 self.net.train()
 
-                a_t  = Complex(acc_test_val_ret, 0.0)
-                a_f  = Complex(acc_test_val_fgt, 0.0)
+                a_t  = Complex(acc_val_ret, 0.0)
+                a_f  = Complex(acc_val_fgt, 0.0)
                 a_or = Complex(self.a_or_value,  0.0)
                 aus  = AUS(a_t, a_or, a_f).value
                 aus_hist.append(aus)
 
                 print(f"[epoch {epoch}] loss={loss.item():.4f} | "
                       f"Train Ret {acc_train_ret:.3f}  Fgt {acc_train_fgt:.3f} | "
-                      f"Val Ret {acc_test_val_ret:.3f}  Fgt {acc_test_val_fgt:.3f} | "
-                      f"Full Ret {acc_full_val_ret:.3f}  Fgt {acc_full_val_fgt:.3f} | AUS {aus:.3f}")
+                      f"Val Ret {acc_val_ret:.3f}  Fgt {acc_val_fgt:.3f} | "
+                      f"Full Ret {full_retain_acc:.3f}  Fgt {full_fgt_acc:.3f} | AUS {aus:.3f}")
 
                 # checkpoint on best AUS
                 if aus > best_aus:
@@ -3013,10 +3013,10 @@ class Delete(BaseMethod):
                     best_state = deepcopy(self.net.state_dict())
                     best_acc_train_ret    = acc_train_ret
                     best_acc_train_fgt    = acc_train_fgt
-                    best_acc_test_val_ret = acc_test_val_ret
-                    best_acc_test_val_fgt = acc_test_val_fgt
-                    best_acc_full_val_ret = acc_full_val_ret
-                    best_acc_full_val_fgt = acc_full_val_fgt
+                    best_acc_val_ret = acc_val_ret
+                    best_acc_val_fgt = acc_val_fgt
+                    best_full_retain_acc = full_retain_acc
+                    best_full_fgt_acc = full_fgt_acc
 
                 if getattr(opt, "save_model", False):  # <-- only save if enabled
                     checkpoint_dir = f"checkpoints_main/{opt.dataset}/{opt.method}/samples_per_class_{opt.samples_per_class}"
@@ -3035,7 +3035,7 @@ class Delete(BaseMethod):
                     print(f"[Checkpoint NOT saved] AUS={aus:.4f} (kept in memory)")
 
                 # early-stops (like your NGFT_weighted)
-                if acc_test_val_fgt == 0.0:
+                if acc_val_fgt == 0.0:
                     zero_fgt += 1
                 else:
                     zero_fgt = 0
@@ -3060,10 +3060,10 @@ class Delete(BaseMethod):
                     epoch_times=epoch_times[-1],
                     train_retain_acc=round(acc_train_ret, 4),
                     train_fgt_acc=round(acc_train_fgt, 4),
-                    val_test_retain_acc=round(acc_test_val_ret, 4),
-                    val_test_fgt_acc=round(acc_test_val_fgt, 4),
-                    val_full_retain_acc=round(acc_full_val_ret, 4),
-                    val_full_fgt_acc=round(acc_full_val_fgt, 4),
+                    val_retain_acc=round(acc_val_ret, 4),
+                    val_fgt_acc=round(acc_val_fgt, 4),
+                    full_retain_acc=round(full_retain_acc, 4),
+                    full_fgt_acc=round(full_fgt_acc, 4),
                     AUS=round(aus, 4),
                     mode=opt.method,
                     dataset=opt.dataset,
@@ -3087,10 +3087,10 @@ class Delete(BaseMethod):
             best_epoch=best_epoch,
             train_retain_acc=round(best_acc_train_ret, 4),
             train_fgt_acc=round(best_acc_train_fgt, 4),
-            val_test_retain_acc=round(best_acc_test_val_ret, 4),
-            val_test_fgt_acc=round(best_acc_test_val_fgt, 4),
-            val_full_retain_acc=round(best_acc_full_val_ret, 4),
-            val_full_fgt_acc=round(best_acc_full_val_fgt, 4),
+            val_retain_acc=round(best_acc_val_ret, 4),
+            val_fgt_acc=round(best_acc_val_fgt, 4),
+            full_retain_acc=round(best_full_retain_acc, 4),
+            full_fgt_acc=round(best_full_fgt_acc, 4),
             AUS=round(best_aus, 4),
             mode=opt.method,
             dataset=opt.dataset,
