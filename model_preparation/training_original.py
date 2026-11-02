@@ -88,7 +88,10 @@ def trainer(removed=None):
     if opt.dataset == 'cifar10':
         os.makedirs(f'/projets/Zdehghani/Source_Free_Class_Unlearning/weights/chks_cifar10/original', exist_ok=True)
         # Load CIFAR-10 data
+        # Use the training split for optimization and validation. Validation uses
+        # the deterministic evaluation transform, while training keeps augmentation.
         trainset = torchvision.datasets.CIFAR10(root=opt.data_path, train=True, download=True, transform=transform_train)
+        eval_trainset = torchvision.datasets.CIFAR10(root=opt.data_path, train=True, download=True, transform=transform_test)
         testset = torchvision.datasets.CIFAR10(root=opt.data_path, train=False, download=True, transform=transform_test)
         
         if 'resnet' in opt.model:    
@@ -97,6 +100,7 @@ def trainer(removed=None):
     elif opt.dataset == 'cifar100':
         os.makedirs(f'/projets/Zdehghani/Source_Free_Class_Unlearning/weights/chks_cifar100/original', exist_ok=True)
         trainset = torchvision.datasets.CIFAR100(root=opt.data_path, train=True, download=True, transform=transform_train)
+        eval_trainset = torchvision.datasets.CIFAR100(root=opt.data_path, train=True, download=True, transform=transform_test)
         testset = torchvision.datasets.CIFAR100(root=opt.data_path, train=False, download=True, transform=transform_test)
         
         if 'resnet' in opt.model:    
@@ -112,15 +116,18 @@ def trainer(removed=None):
         if opt.model == 'ViT':
             # use the 224×224 ViT transforms you defined above
             trainset = torchvision.datasets.ImageFolder(opt.data_path+'/TinyImageNet/train', transform=transform_train)
+            eval_trainset = torchvision.datasets.ImageFolder(opt.data_path+'/TinyImageNet/train', transform=transform_test)
             testset  = torchvision.datasets.ImageFolder(opt.data_path+'/TinyImageNet/val',   transform=transform_test)
             model.heads[-1] = nn.Linear(model.heads[-1].in_features, opt.num_classes).to('cuda')        
             
         elif opt.model == 'swint':
             trainset = torchvision.datasets.ImageFolder(opt.data_path+'/TinyImageNet/train', transform=transform_train)
+            eval_trainset = torchvision.datasets.ImageFolder(opt.data_path+'/TinyImageNet/train', transform=transform_test)
             testset = torchvision.datasets.ImageFolder(opt.data_path+'/TinyImageNet/val',   transform=transform_test)
             
         else:
             trainset = torchvision.datasets.ImageFolder(root=opt.data_path+'/TinyImageNet/train',transform=transform_train_tiny)
+            eval_trainset = torchvision.datasets.ImageFolder(root=opt.data_path+'/TinyImageNet/train',transform=transform_test_tiny)
             #testset = torchvision.datasets.ImageFolder(root=opt.data_path+'/TinyImageNet/val/images',transform=transform_test_tiny)
             testset = torchvision.datasets.ImageFolder(root=opt.data_path+'/TinyImageNet/val', transform=transform_test_tiny)
 
@@ -133,9 +140,29 @@ def trainer(removed=None):
             elif opt.model == 'AllCNN':                     
                 model.classifier[-1] = nn.Linear(model.classifier[-1].in_features, opt.num_classes).to('cuda')            
                 
-    #dataloader
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=256, shuffle=True, num_workers=opt.num_workers)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=256, shuffle=False, num_workers=opt.num_workers)
+    # CIFAR-10/100 and TinyImageNet: reproducibly split the labeled training
+    # data 90/10. The validation subset selects checkpoints; the official test
+    # split is used only for per-epoch reporting.
+    if opt.dataset in ('cifar10', 'cifar100', 'TinyImageNet'):
+        split_generator = torch.Generator().manual_seed(42)
+        indices = torch.randperm(len(trainset), generator=split_generator).tolist()
+        train_size = int(0.9 * len(indices))
+        train_indices, val_indices = indices[:train_size], indices[train_size:]
+        train_data = Subset(trainset, train_indices)
+        val_data = Subset(eval_trainset, val_indices)
+        test_data = testset
+    else:
+        train_data = trainset
+        val_data = testset
+        test_data = None
+
+    # dataloaders
+    trainloader = torch.utils.data.DataLoader(train_data, batch_size=256, shuffle=True, num_workers=opt.num_workers)
+    valloader = torch.utils.data.DataLoader(val_data, batch_size=256, shuffle=False, num_workers=opt.num_workers)
+    testloader = (
+        torch.utils.data.DataLoader(test_data, batch_size=256, shuffle=False, num_workers=opt.num_workers)
+        if test_data is not None else None
+    )
 
     epochs=300
     criterion = nn.CrossEntropyLoss(label_smoothing=0.4)
@@ -169,46 +196,52 @@ def trainer(removed=None):
         train_acc = 100 * correct / total
         train_loss = running_loss / len(trainloader)
         train_scheduler.step()
-        torch.save(model.state_dict(), f'weights/chks_{opt.dataset}/original/best_checkpoint_{opt.model}_m{opt.n_model}.pth')
+        model.eval()
 
-        if epoch % 1 == 0:        
-            model.eval()
-            correct = 0
-            total = 0
-            val_running_loss = 0.0  # Initialize validation loss
-
+        def evaluate(loader):
+            loss_sum, correct, count = 0.0, 0, 0
             with torch.no_grad():
-                for data in testloader:
-                    inputs, labels = data
+                for inputs, labels in loader:
                     inputs, labels = inputs.to('cuda'), labels.to('cuda')
                     outputs = model(inputs)
-                    _, predicted = torch.max(outputs.data, 1)
-                    total += labels.size(0)
-                    correct += (predicted == labels).sum().item()
-                    
-                    # Compute validation loss
-                    loss = criterion(outputs, labels)
-                    val_running_loss += loss.item()
-            val_acc = 100 * correct / total
-            val_loss = val_running_loss / len(testloader)  # Compute average validation loss
+                    loss_sum += criterion(outputs, labels).item() * labels.size(0)
+                    correct += (outputs.argmax(dim=1) == labels).sum().item()
+                    count += labels.size(0)
+            return loss_sum / count, 100.0 * correct / count
 
-    
-                # Check if this is the best validation accuracy
-            if val_acc > best_acc:
-                best_acc = val_acc
-                patience_counter = 0  # Reset patience counter
-                torch.save(model.state_dict(), f'weights/chks_{opt.dataset}/original/best_checkpoint_{opt.model}_m{opt.n_model}.pth')
-                print(f"New best model saved with Val Acc: {best_acc:.3f}")
-            else:
-                patience_counter += 1  # No improvement
+        val_loss, val_acc = evaluate(valloader)
+        if testloader is not None:
+            test_loss, test_acc = evaluate(testloader)
+            test_report = f'Test Loss: {test_loss:.3f}, Test Acc: {test_acc:.3f}'
+        else:
+            test_loss, test_acc = None, None
+            test_report = 'Test metrics: unavailable (test split has no labels)'
 
-            print(f'Epoch: {epoch}, Train Loss: {train_loss:.3f}, Val Loss: {val_loss:.3f}, Train Acc: {train_acc:.3f}, Val Acc: {val_acc:.3f}, Best Acc: {best_acc:.3f}')
-            wandb.log({"train_loss": train_loss, "val_loss": val_loss, "train_acc": train_acc, "val_acc": val_acc})
+        # Select and save checkpoints only by validation accuracy.
+        if val_acc > best_acc:
+            best_acc = val_acc
+            patience_counter = 0
+            torch.save(model.state_dict(), f'weights/chks_{opt.dataset}/original/best_checkpoint_{opt.model}_m{opt.n_model}.pth')
+            print(f"New best model saved with Val Acc: {best_acc:.3f}")
+        else:
+            patience_counter += 1
 
-            # Check for early stopping
-            if patience_counter >= patience:
-                print("Early stopping triggered.")
-                break  # Exit training loop
+        print(
+            f'Epoch: {epoch}, Train Loss: {train_loss:.3f}, Train Acc: {train_acc:.3f}, '
+            f'Val Loss: {val_loss:.3f}, Val Acc: {val_acc:.3f}, '
+            f'{test_report}, Best Val Acc: {best_acc:.3f}'
+        )
+        epoch_metrics = {
+            "train_loss": train_loss, "train_acc": train_acc,
+            "val_loss": val_loss, "val_acc": val_acc,
+        }
+        if testloader is not None:
+            epoch_metrics.update({"test_loss": test_loss, "test_acc": test_acc})
+        wandb.log(epoch_metrics)
+
+        if patience_counter >= patience:
+            print("Early stopping triggered.")
+            break
     
     
     

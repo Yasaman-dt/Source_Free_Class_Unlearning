@@ -419,6 +419,8 @@ class BaseMethod:
             forget_count=forget_count,
             total_count=total_count)            
         self.net.eval()
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         return self.net
     
     
@@ -828,6 +830,8 @@ class NGFT_weighted(BaseMethod):
             retain_count=retain_count,
             forget_count=forget_count,
             total_count=total_count)
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.net.eval()
         return self.net
 

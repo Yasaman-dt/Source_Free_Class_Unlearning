@@ -93,7 +93,7 @@ def select_n_per_class_numpy(embeddings, labels, num_per_class, num_classes):
     return selected_embeddings, selected_labels
 
 
-def main(train_retain_loader_real, train_fgt_loader_real, test_retain_loader, test_fgt_loader, train_loader=None, test_loader=None, seed=0, class_to_remove=0):
+def main(train_retain_loader_real, train_fgt_loader_real, test_retain_loader, test_fgt_loader, val_retain_loader=None, val_fgt_loader=None, train_loader=None, test_loader=None, seed=0, class_to_remove=0):
    
     forget_tag = get_forget_tag(class_to_remove)
     v_orig, v_unlearn, v_rt = None, None, None
@@ -174,7 +174,13 @@ def main(train_retain_loader_real, train_fgt_loader_real, test_retain_loader, te
             #set tollerance for stopping criteria
             opt.target_accuracy = 0.00
             #approach = choose_method(opt.method)(pretr_model, retain_loader_synth, forget_loader_synth, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=class_to_remove)  #generated samples
-            approach = choose_method(opt.method)(pretr_model, train_retain_loader_real, train_fgt_loader_real, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=class_to_remove) #real samples
+            # Select checkpoints on the 10% training validation split; keep the
+            # official test loaders separate for final reporting below.
+            approach = choose_method(opt.method)(pretr_model, train_retain_loader_real, train_fgt_loader_real,
+                                                val_retain_loader if val_retain_loader is not None else test_retain_loader,
+                                                val_fgt_loader if val_fgt_loader is not None else test_fgt_loader,
+                                                retainfull_loader_real, forgetfull_loader_real,
+                                                class_to_remove=class_to_remove) #real samples
 
         if opt.load_unlearned_model:
             print("LOADING UNLEARNED MODEL")
@@ -367,16 +373,35 @@ if __name__ == "__main__":
                 # -------------------- Separate Forget and Retain Sets --------------------
                 # Forget set
                 #forget_mask_train = (train_labels == forget_class)
-                forget_mask_train  = torch.isin(train_labels, forget_tensor)
+                # Match the original model's reproducible seed-42 90/10 split.
+                split_generator = torch.Generator().manual_seed(42)
+                split_order = torch.randperm(len(train_labels), generator=split_generator)
+                train_cutoff = int(0.9 * len(split_order))
+                train_index_mask = torch.zeros(len(train_labels), dtype=torch.bool)
+                val_index_mask = torch.zeros(len(train_labels), dtype=torch.bool)
+                train_index_mask[split_order[:train_cutoff]] = True
+                val_index_mask[split_order[train_cutoff:]] = True
+                train_index_mask = train_index_mask.to(train_labels.device)
+                val_index_mask = val_index_mask.to(train_labels.device)
+
+                class_forget_mask_train = torch.isin(train_labels, forget_tensor)
+                forget_mask_train = train_index_mask & class_forget_mask_train
                 forget_features_train = train_emb[forget_mask_train]
                 forget_labels_train = train_labels[forget_mask_train]
 
 
                 # Retain set
                 #retain_mask_train = (train_labels != forget_class)
-                retain_mask_train  = ~forget_mask_train
+                retain_mask_train = train_index_mask & ~class_forget_mask_train
                 retain_features_train = train_emb[retain_mask_train]
                 retain_labels_train = train_labels[retain_mask_train]
+
+                val_forget_mask = val_index_mask & class_forget_mask_train
+                val_retain_mask = val_index_mask & ~class_forget_mask_train
+                val_forget_dataset = TensorDataset(train_emb[val_forget_mask], train_labels[val_forget_mask])
+                val_retain_dataset = TensorDataset(train_emb[val_retain_mask], train_labels[val_retain_mask])
+                val_fgt_loader_real = DataLoader(val_forget_dataset, batch_size=batch_size, shuffle=False)
+                val_retain_loader_real = DataLoader(val_retain_dataset, batch_size=batch_size, shuffle=False)
                 
                 # Forget set
                 #forget_mask_test = (test_labels == forget_class)
@@ -440,6 +465,8 @@ if __name__ == "__main__":
                                                 train_fgt_loader_real=train_fgt_loader_real,
                                                 test_retain_loader=test_retain_loader_real,
                                                 test_fgt_loader=test_fgt_loader_real,
+                                                val_retain_loader=val_retain_loader_real,
+                                                val_fgt_loader=val_fgt_loader_real,
                                                 train_loader=all_train_loader,
                                                 test_loader=all_test_loader,
                                                 seed=i,

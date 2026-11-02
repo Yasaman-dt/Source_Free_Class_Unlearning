@@ -484,6 +484,8 @@ class BaseMethod:
 
 
         self.net.eval()
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         return self.net
 
     
@@ -924,6 +926,8 @@ class NGFT_weighted(BaseMethod):
             unlearning_time_until_best=round(unlearning_time_until_best,4))
 
 
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.net.eval()
         return self.net
 

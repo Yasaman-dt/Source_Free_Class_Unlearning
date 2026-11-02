@@ -5,12 +5,12 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np
+from torch.utils.data import DataLoader, Subset
 from models.allcnn import AllCNN
 import csv
 from models.ViT import ViT_16_mod
 from tools.opts import OPT as opt
 import os 
-from tools.dsets import get_dsets_remove_class, get_dsets
 from models.swin_transformer import swin_tiny_patch4_window7_224
 from torchvision.transforms import InterpolationMode
 import wandb
@@ -85,7 +85,7 @@ def get_forget_tag(class_to_remove):
     return str(class_to_remove)
 
 
-def log_epoch_to_csv(epoch, train_acc, train_loss, val_acc, val_loss, mode, dataset, model, class_to_remove, seed):
+def log_epoch_to_csv(epoch, train_acc, train_loss, val_acc, val_loss, test_acc, test_loss, mode, dataset, model, class_to_remove, seed):
     os.makedirs(f'results/{mode}/epoch_logs', exist_ok=True)
 
     if isinstance(class_to_remove, list):
@@ -99,8 +99,8 @@ def log_epoch_to_csv(epoch, train_acc, train_loss, val_acc, val_loss, mode, data
     with open(csv_path, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
         if not file_exists:
-            writer.writerow(['epoch', 'mode', 'Forget Class', 'seed', 'train_acc', 'train_loss', 'val_acc', 'val_loss'])
-        writer.writerow([epoch, mode, class_name, seed, train_acc, train_loss, val_acc, val_loss])
+            writer.writerow(['epoch', 'mode', 'Forget Class', 'seed', 'train_acc', 'train_loss', 'val_acc', 'val_loss', 'test_acc', 'test_loss'])
+        writer.writerow([epoch, mode, class_name, seed, train_acc, train_loss, val_acc, val_loss, test_acc, test_loss])
 
 def log_summary_across_classes(best_epoch, train_acc, train_loss, best_acc, val_loss, mode, dataset, model, class_to_remove, seed):
     os.makedirs('results', exist_ok=True)
@@ -117,6 +117,59 @@ def log_summary_across_classes(best_epoch, train_acc, train_loss, best_acc, val_
         if not file_exists:
             writer.writerow(['epoch', 'Forget Class', 'seed', 'mode', 'dataset', 'model', 'train_acc', 'train_loss', 'best_val_acc', 'val_loss'])
         writer.writerow([best_epoch, class_name, seed, mode, dataset, model, train_acc, train_loss, best_acc, val_loss])
+
+
+def get_oracle_loaders(class_to_remove, seed):
+    """Build Oracle loaders using the same deterministic 90/10 split as the original model."""
+    if opt.dataset == 'TinyImageNet' and opt.model not in ('ViT', 'swint'):
+        train_transform = transform_train_tiny
+        eval_transform = transform_test_tiny
+    else:
+        train_transform = transform_train
+        eval_transform = transform_test
+
+    if opt.dataset == 'cifar10':
+        train_aug = torchvision.datasets.CIFAR10(opt.data_path, train=True, download=True, transform=train_transform)
+        train_eval = torchvision.datasets.CIFAR10(opt.data_path, train=True, download=True, transform=eval_transform)
+        test_data = torchvision.datasets.CIFAR10(opt.data_path, train=False, download=True, transform=eval_transform)
+    elif opt.dataset == 'cifar100':
+        train_aug = torchvision.datasets.CIFAR100(opt.data_path, train=True, download=True, transform=train_transform)
+        train_eval = torchvision.datasets.CIFAR100(opt.data_path, train=True, download=True, transform=eval_transform)
+        test_data = torchvision.datasets.CIFAR100(opt.data_path, train=False, download=True, transform=eval_transform)
+    elif opt.dataset == 'TinyImageNet':
+        train_path = os.path.join(opt.data_path, 'TinyImageNet', 'train')
+        val_path = os.path.join(opt.data_path, 'TinyImageNet', 'val')
+        train_aug = torchvision.datasets.ImageFolder(train_path, transform=train_transform)
+        train_eval = torchvision.datasets.ImageFolder(train_path, transform=eval_transform)
+        # TinyImageNet's labeled val directory is the available held-out test set.
+        test_data = torchvision.datasets.ImageFolder(val_path, transform=eval_transform)
+    else:
+        raise ValueError(f'Unsupported dataset: {opt.dataset}')
+
+    split_generator = torch.Generator().manual_seed(42)
+    indices = torch.randperm(len(train_aug), generator=split_generator).tolist()
+    train_size = int(0.9 * len(indices))
+    train_indices, val_indices = indices[:train_size], indices[train_size:]
+
+    targets = np.asarray(train_aug.targets)
+    if opt.mode == 'CR':
+        forgotten = np.isin(targets, np.atleast_1d(class_to_remove))
+    else:
+        num = 10000 if opt.dataset == 'TinyImageNet' else 5000
+        forget_file = f'{opt.root_folder}forget_id_files/forget_idx_{num}_{opt.dataset}_seed_{seed}.txt'
+        forget_indices = np.loadtxt(forget_file).astype(np.int64).reshape(-1)
+        forgotten = np.zeros(len(train_aug), dtype=bool)
+        forgotten[forget_indices] = True
+
+    retained_train_indices = [idx for idx in train_indices if not forgotten[idx]]
+    retained_val_indices = [idx for idx in val_indices if not forgotten[idx]]
+    train_loader = DataLoader(Subset(train_aug, retained_train_indices), batch_size=opt.batch_size, shuffle=True, num_workers=opt.num_workers)
+    val_loader = DataLoader(Subset(train_eval, retained_val_indices), batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
+
+    # Keep the entire held-out test split for reporting, including forgotten
+    # classes. It is never used to select the checkpoint.
+    test_loader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
+    return train_loader, val_loader, test_loader
 
         
 def trainer(class_to_remove, seed):
@@ -137,20 +190,7 @@ def trainer(class_to_remove, seed):
         raise ValueError(f"Unknown model: {opt.model}")
     
             
-    if opt.mode == 'HR':
-        if opt.dataset == "cifar10":
-            num=5000
-        elif opt.dataset == "cifar100":
-            num=5000
-        elif opt.dataset == "TinyImageNet":
-            num=10000
-
-        file_fgt = f'{opt.root_folder}forget_id_files/forget_idx_{num}_{opt.dataset}_seed_{seed}.txt'
-        _, test_loader, _, train_retain_loader = get_dsets(file_fgt=file_fgt)
-    if opt.mode == 'CR':
-        _, _, _, train_retain_loader, _, test_retain_loader = get_dsets_remove_class(class_to_remove)
-        #use test_loader the one with forget classes removed
-        test_loader = test_retain_loader
+    train_retain_loader, val_loader, test_loader = get_oracle_loaders(class_to_remove, seed)
 
     if opt.dataset == 'cifar10':
         os.makedirs('./weights/chks_cifar10', exist_ok=True)
@@ -217,25 +257,22 @@ def trainer(class_to_remove, seed):
         # elif opt.mode == 'HR':
         #     torch.save(model.state_dict(), f'weights/chks_{opt.dataset}/retrained/chks_{opt.dataset}_seed_{seed}.pth')
 
-        if epoch % 1 == 0:        
+        if epoch % 1 == 0:
             model.eval()
-            correct = 0
-            total = 0
-            val_running_loss = 0.0  # Initialize validation loss
 
-            with torch.no_grad():
-                for data in test_loader:
-                    inputs, labels = data
-                    inputs, labels = inputs.to('cuda'), labels.to('cuda')
-                    outputs = model(inputs)
-                    _, predicted = torch.max(outputs.data, 1)
-                    total += labels.size(0)
-                    correct += (predicted == labels).sum().item()
-                    # Compute validation loss
-                    loss = criterion(outputs, labels)
-                    val_running_loss += loss.item()
-            val_acc = 100 * correct / total
-            val_loss = val_running_loss / len(test_loader)  # Compute average validation loss
+            def evaluate(loader):
+                loss_sum, correct, count = 0.0, 0, 0
+                with torch.no_grad():
+                    for inputs, labels in loader:
+                        inputs, labels = inputs.to('cuda'), labels.to('cuda')
+                        outputs = model(inputs)
+                        loss_sum += criterion(outputs, labels).item() * labels.size(0)
+                        correct += (outputs.argmax(dim=1) == labels).sum().item()
+                        count += labels.size(0)
+                return loss_sum / count, 100.0 * correct / count
+
+            val_loss, val_acc = evaluate(val_loader)
+            test_loss, test_acc = evaluate(test_loader)
 
     
                 # Check if this is the best validation accuracy
@@ -256,8 +293,8 @@ def trainer(class_to_remove, seed):
             else:
                 patience_counter += 1  # No improvement
 
-            print(f'Epoch: {epoch}, Train Loss: {train_loss:.3f}, Val Loss: {val_loss:.3f}, Train Acc: {train_acc:.3f}, Val Acc: {val_acc:.3f}, Best Acc: {best_acc:.3f}')
-            wandb.log({"train_loss": train_loss, "val_loss": val_loss, "train_acc": train_acc, "val_acc": val_acc})
+            print(f'Epoch: {epoch}, Train Loss: {train_loss:.3f}, Val Loss: {val_loss:.3f}, Test Loss: {test_loss:.3f}, Train Acc: {train_acc:.3f}, Val Acc: {val_acc:.3f}, Test Acc: {test_acc:.3f}, Best Val Acc: {best_acc:.3f}')
+            wandb.log({"train_loss": train_loss, "val_loss": val_loss, "test_loss": test_loss, "train_acc": train_acc, "val_acc": val_acc, "test_acc": test_acc})
 
             # Save a summary across all unlearning runs
             log_epoch_to_csv(
@@ -266,6 +303,8 @@ def trainer(class_to_remove, seed):
                 train_loss=round(train_loss, 4),
                 val_acc=round(val_acc, 4),
                 val_loss=round(val_loss, 4),
+                test_acc=round(test_acc, 4),
+                test_loss=round(test_loss, 4),
                 mode='retrained',
                 dataset=opt.dataset,
                 model=opt.model,

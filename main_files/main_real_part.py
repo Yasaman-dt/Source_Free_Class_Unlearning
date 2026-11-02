@@ -53,6 +53,10 @@ def main(train_retain_loader_img,
         train_fgt_loader_real,
         test_retain_loader,
         test_fgt_loader,
+        val_retain_loader_img=None,
+        val_fgt_loader_img=None,
+        val_retain_loader=None,
+        val_fgt_loader=None,
         train_loader=None,
         test_loader=None,
         seed=0,
@@ -131,12 +135,12 @@ def main(train_retain_loader_img,
             approach = choose_method(opt.method)(pretr_model,
                                                     train_retain_loader_img,
                                                     train_fgt_loader_img,
-                                                    test_retain_loader_img,
-                                                    test_fgt_loader_img,
+                                                    val_retain_loader_img if val_retain_loader_img is not None else test_retain_loader_img,
+                                                    val_fgt_loader_img if val_fgt_loader_img is not None else test_fgt_loader_img,
                                                     train_retain_loader_real,
                                                     train_fgt_loader_real,
-                                                    test_retain_loader,
-                                                    test_fgt_loader,
+                                                    val_retain_loader if val_retain_loader is not None else test_retain_loader,
+                                                    val_fgt_loader if val_fgt_loader is not None else test_fgt_loader,
                                                     retainfull_loader_real,
                                                     forgetfull_loader_real,
                                                     class_to_remove=class_to_remove)  #generated samples
@@ -298,10 +302,12 @@ if __name__ == "__main__":
 
             if dataset_name_lower == "cifar10":
                 train_dataset_real = CIFAR10(root="./datasets/CIFAR10", train=True, download=True, transform=train_transform)
+                train_dataset_eval = CIFAR10(root="./datasets/CIFAR10", train=True, download=True, transform=test_transform)
                 test_dataset_real = CIFAR10(root="./datasets/CIFAR10", train=False, download=True, transform=test_transform)
                 
             if dataset_name_lower == "cifar100":
                 train_dataset_real = CIFAR100(root="./datasets/CIFAR100", train=True, download=True, transform=train_transform)
+                train_dataset_eval = CIFAR100(root="./datasets/CIFAR100", train=True, download=True, transform=test_transform)
                 test_dataset_real = CIFAR100(root="./datasets/CIFAR100", train=False, download=True, transform=test_transform)
 
             if dataset_name_lower == "TinyImageNet":
@@ -310,6 +316,7 @@ if __name__ == "__main__":
 
 
                 train_dataset_real = datasets.ImageFolder(train_dir, transform=train_transform)
+                train_dataset_eval = datasets.ImageFolder(train_dir, transform=val_transform)
                 test_dataset_real = datasets.ImageFolder(val_dir, transform=val_transform)
 
 
@@ -372,16 +379,31 @@ if __name__ == "__main__":
                 full_loader = DataLoader(full_dataset, batch_size=batch_size, shuffle=False)
                 
                 # -------------------- Separate Forget and Retain Sets --------------------
-                # Forget set
-                forget_mask_train = (train_labels == forget_class)
+                split_generator = torch.Generator().manual_seed(42)
+                split_order = torch.randperm(len(train_labels), generator=split_generator)
+                train_cutoff = int(0.9 * len(split_order))
+                train_index_mask = torch.zeros(len(train_labels), dtype=torch.bool)
+                val_index_mask = torch.zeros(len(train_labels), dtype=torch.bool)
+                train_index_mask[split_order[:train_cutoff]] = True
+                val_index_mask[split_order[train_cutoff:]] = True
+                train_index_mask = train_index_mask.to(train_labels.device)
+                val_index_mask = val_index_mask.to(train_labels.device)
+
+                class_forget_mask_train = train_labels == forget_class
+                forget_mask_train = train_index_mask & class_forget_mask_train
                 forget_features_train = train_emb[forget_mask_train]
                 forget_labels_train = train_labels[forget_mask_train]
 
 
                 # Retain set
-                retain_mask_train = (train_labels != forget_class)
+                retain_mask_train = train_index_mask & ~class_forget_mask_train
                 retain_features_train = train_emb[retain_mask_train]
                 retain_labels_train = train_labels[retain_mask_train]
+
+                val_forget_mask = val_index_mask & class_forget_mask_train
+                val_retain_mask = val_index_mask & ~class_forget_mask_train
+                val_fgt_loader_real = DataLoader(TensorDataset(train_emb[val_forget_mask], train_labels[val_forget_mask]), batch_size=batch_size, shuffle=False)
+                val_retain_loader_real = DataLoader(TensorDataset(train_emb[val_retain_mask], train_labels[val_retain_mask]), batch_size=batch_size, shuffle=False)
                 
                 # Forget set
                 forget_mask_test = (test_labels == forget_class)
@@ -434,11 +456,18 @@ if __name__ == "__main__":
                 print(opt.RT_model_weights_path)
                 
                 # For train set
-                retain_indices_train = [i for i, (_, label) in enumerate(train_dataset_real) if label != forget_class]
-                forget_indices_train = [i for i, (_, label) in enumerate(train_dataset_real) if label == forget_class]
+                train_indices_split = split_order[:train_cutoff].tolist()
+                val_indices_split = split_order[train_cutoff:].tolist()
+                train_targets = np.asarray(train_dataset_real.targets)
+                retain_indices_train = [i for i in train_indices_split if train_targets[i] != forget_class]
+                forget_indices_train = [i for i in train_indices_split if train_targets[i] == forget_class]
+                retain_indices_val = [i for i in val_indices_split if train_targets[i] != forget_class]
+                forget_indices_val = [i for i in val_indices_split if train_targets[i] == forget_class]
 
                 train_retain_dataset_img = Subset(train_dataset_real, retain_indices_train)
                 train_fgt_dataset_img = Subset(train_dataset_real, forget_indices_train)
+                val_retain_dataset_img = Subset(train_dataset_eval, retain_indices_val)
+                val_fgt_dataset_img = Subset(train_dataset_eval, forget_indices_val)
 
                 # For test set
                 retain_indices_test = [i for i, (_, label) in enumerate(test_dataset_real) if label != forget_class]
@@ -450,6 +479,8 @@ if __name__ == "__main__":
 
                 train_retain_loader_img = DataLoader(train_retain_dataset_img, batch_size=opt.batch_size, shuffle=True, num_workers=4)
                 train_fgt_loader_img = DataLoader(train_fgt_dataset_img, batch_size=opt.batch_size, shuffle=True, num_workers=4)
+                val_retain_loader_img = DataLoader(val_retain_dataset_img, batch_size=opt.batch_size, shuffle=False, num_workers=4)
+                val_fgt_loader_img = DataLoader(val_fgt_dataset_img, batch_size=opt.batch_size, shuffle=False, num_workers=4)
 
                 test_retain_loader_img = DataLoader(test_retain_dataset_img, batch_size=opt.batch_size, shuffle=False, num_workers=4)
                 test_fgt_loader_img = DataLoader(test_fgt_dataset_img, batch_size=opt.batch_size, shuffle=False, num_workers=4)    
@@ -463,6 +494,10 @@ if __name__ == "__main__":
                                                 train_fgt_loader_real=train_fgt_loader_real,
                                                 test_retain_loader=test_retain_loader_real,
                                                 test_fgt_loader=test_fgt_loader_real,
+                                                val_retain_loader_img=val_retain_loader_img,
+                                                val_fgt_loader_img=val_fgt_loader_img,
+                                                val_retain_loader=val_retain_loader_real,
+                                                val_fgt_loader=val_fgt_loader_real,
                                                 train_loader=all_train_loader,
                                                 test_loader=all_test_loader,
                                                 seed=i,

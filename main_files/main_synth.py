@@ -72,7 +72,7 @@ def select_n_per_class_numpy(embeddings, labels, num_per_class, num_classes):
             selected_labels.append(labels[chosen_indices])
         else:
             print(f"Warning: Class {class_idx} has only {len(cls_indices)} samples")
-    
+
     selected_embeddings = np.concatenate(selected_embeddings, axis=0)
     selected_labels = np.concatenate(selected_labels, axis=0)
     return selected_embeddings, selected_labels
@@ -127,8 +127,8 @@ def analyze_sample_probabilities(labels_tensor, probs_array, num_classes):
 
 
 
-def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_fgt_loader_real, test_retain_loader, test_fgt_loader, train_loader=None, test_loader=None, seed=0, class_to_remove=0):
-   
+def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_fgt_loader_real, test_retain_loader, test_fgt_loader, val_retain_loader=None, val_fgt_loader=None, train_loader=None, test_loader=None, seed=0, class_to_remove=0):
+
     forget_tag = get_forget_tag(class_to_remove)
     v_orig, v_unlearn, v_rt = None, None, None
     original_pretr_model = get_trained_model()
@@ -162,12 +162,12 @@ def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_f
 
         # Step 1: Generate synthetic retain samples in feature space
         #samples_per_class = opt.samples_per_class
-        
+
 
         #checkpoint_path = f"{DIR}/{files}/{dataset_name}/best_checkpoint_resnet18.pth"  # Set your actual checkpoint path
-        #model = get_model(model_name, dataset_name, num_classes, checkpoint_path=checkpoint_path) 
+        #model = get_model(model_name, dataset_name, num_classes, checkpoint_path=checkpoint_path)
         #fc_layer = model.fc
-        
+
 
         print(all_features_synth.shape)
         print(all_labels_synth.shape)
@@ -175,7 +175,7 @@ def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_f
         print("class_to_remove:",class_to_remove)
 
 
-        forget_classes = class_to_remove  
+        forget_classes = class_to_remove
         print("forget_classes:",forget_classes)
 
         forget_tensor = torch.tensor(forget_classes, device=all_labels_synth.device)
@@ -190,7 +190,7 @@ def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_f
         #forgetfull_mask_synth = (all_labels_synth == forget_class)
         forgetfull_features_synth = all_features_synth[forgetfull_mask_synth]
         forgetfull_labels_synth = all_labels_synth[forgetfull_mask_synth]
-        
+
         # Retain set
         #retainfull_mask_synth = (all_labels_synth != forget_class)
         retainfull_features_synth = all_features_synth[retainfull_mask_synth]
@@ -208,15 +208,15 @@ def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_f
 
         retainfull_features_synth = retainfull_features_synth.to(opt.device)
         retainfull_labels_synth = retainfull_labels_synth.to(opt.device)
-        
+
         print(f" Generated Retain Samples: {retainfull_features_synth.shape[0]} ")
         print(f" Generated Forget Samples: {forgetfull_features_synth.shape[0]} (Class {forget_classes})")
-        
-        
+
+
         forget_loader_synth = DataLoader(TensorDataset(forgetfull_features_synth, forgetfull_labels_synth), batch_size=opt.batch_size, shuffle=False)
         retain_loader_synth = DataLoader(TensorDataset(retainfull_features_synth, retainfull_labels_synth), batch_size=opt.batch_size, shuffle=False)
-        
-        
+
+
 
         teacher_model = None
         if opt.method.upper() in {"DELETE", "SCRUB"}:
@@ -234,23 +234,23 @@ def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_f
                 seed=seed,
                 teacher_model=teacher_model,
             )
-        
+
         data_path = f"{DIR}/{embeddings_folder}/{dataset_name_upper}/{opt.model}_full_m{n_model}.npz"
-    
+
         data = np.load(data_path)
         embeddings_real = data["embeddings"]  # Shape: (N, 512)
         labels_real = data["labels"]  # Shape: (N,)
-    
+
         print(f"Real Embeddings: {embeddings_real.shape}")
-    
+
         # Convert to tensors
         #embeddings_tensor_real = torch.tensor(embeddings_real, dtype=torch.float32)
         #labels_tensor_real = torch.tensor(labels_real, dtype=torch.long)
-    
+
         # Split into forget and retain sets
         #forget_mask_real = labels_tensor_real == forget_class
         #retain_mask_real = labels_tensor_real != forget_class
-    
+
         # Convert to tensors
         embeddings_tensor_real = torch.tensor(embeddings_real, dtype=torch.float32)
         labels_tensor_real = torch.tensor(labels_real, dtype=torch.long)
@@ -260,26 +260,32 @@ def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_f
 
         forget_mask_real = torch.isin(labels_tensor_real, forget_tensor_real)
         retain_mask_real = ~forget_mask_real
-    
+
         # Forget set (samples from class 0)
         forget_embeddings_real = embeddings_tensor_real[forget_mask_real]
         forget_labels_real = labels_tensor_real[forget_mask_real]
-    
+
         # Retain set (samples from all other classes)
         retain_embeddings_real = embeddings_tensor_real[retain_mask_real]
         retain_labels_real = labels_tensor_real[retain_mask_real]
-    
+
         print(f"Forget set size: {forget_embeddings_real.shape}, Retain set size: {retain_embeddings_real.shape}")
-    
+
         # Create DataLoaders for validation
         forgetfull_loader_real = DataLoader(TensorDataset(forget_embeddings_real, forget_labels_real), batch_size, shuffle=False)
         retainfull_loader_real = DataLoader(TensorDataset(retain_embeddings_real, retain_labels_real), batch_size, shuffle=False)
 
-            
+
         if opt.mode == "CR":
             #set tollerance for stopping criteria
             opt.target_accuracy = 0.00
-            approach = choose_method(opt.method)(pretr_model, retain_loader_synth, forget_loader_synth, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=class_to_remove)  #generated samples
+            # Synthetic samples remain the unlearning training data. Select
+            # checkpoints on the real 10% training validation split instead.
+            approach = choose_method(opt.method)(pretr_model, retain_loader_synth, forget_loader_synth,
+                                                val_retain_loader if val_retain_loader is not None else test_retain_loader,
+                                                val_fgt_loader if val_fgt_loader is not None else test_fgt_loader,
+                                                retainfull_loader_real, forgetfull_loader_real,
+                                                class_to_remove=class_to_remove)  #generated samples
             #approach = choose_method(opt.method)(pretr_model, train_retain_loader_real, train_fgt_loader_real, test_retain_loader, test_fgt_loader, retainfull_loader_real, forgetfull_loader_real, class_to_remove=class_to_remove) #real samples
 
         if opt.load_unlearned_model:
@@ -309,10 +315,10 @@ def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_f
             print('F1 mean: ',df_un_model.F1.mean())
             #df_un_model = pd.DataFrame([0],columns=["PLACEHOLDER"])
 
-    
+
         df_un_model["unlearn_time"] = unlearn_time
 
-        print("UNLEARNING COMPLETED, COMPUTING ACCURACIES...")      
+        print("UNLEARNING COMPLETED, COMPUTING ACCURACIES...")
 
         if opt.mode == "CR":
             df_un_model["forget_test_accuracy"] = calculate_accuracy(unlearned_model, test_fgt_loader, use_fc_only=True)
@@ -343,7 +349,7 @@ def main(all_features_synth, all_labels_synth, train_retain_loader_real, train_f
 #
     #    v_rt = df_rt_model.mean(0)
     #    v_rt = pd.DataFrame(v_rt).T
-       
+
 
 
     if opt.run_unlearn:
@@ -359,7 +365,7 @@ if __name__ == "__main__":
     df_unlearned_total=[]
     df_retrained_total=[]
     df_orig_total=[]
-    
+
     #create output folders
     if not os.path.exists(f"{opt.root_folder}/out_synth_{opt.noise_type}/samples_per_class_{opt.samples_per_class}/{opt.mode}/{opt.dataset}/{opt.method}/lr{opt.lr_unlearn}/models"):
         #os.makedirs(opt.root_folder+"out_synth_{opt.noise_type}/"+opt.mode+"/"+opt.dataset+"/models")
@@ -373,7 +379,7 @@ if __name__ == "__main__":
 
         print(f"Seed {i}")
         if opt.mode == "CR":
-            
+
             print("Generating synthetic embeddings ONCE...")
             original_pretr_model = get_trained_model().to(device)
             original_pretr_model.eval()
@@ -381,21 +387,21 @@ if __name__ == "__main__":
             all_features_synth, all_labels_synth, all_probability_synth, all_sample_probs_synth = generate_emb_samples_balanced(
                 num_classes, opt.samples_per_class, original_pretr_model, noise_type=opt.noise_type, device=device
             )
-            
+
             # all_features_synth, all_labels_synth, all_probability_synth, all_sample_probs_synth = generate_emb_samples_balanced(
             #     num_classes, opt.samples_per_class, original_pretr_model, noise_type=opt.noise_type, device=device,
             #     min_confidence=0.05, max_confidence=0.9
-            # )            
-            
+            # )
+
             #print("\n=== Class-wise Gaussian Densities of Synthetic Samples ===")
             #prob_stats = analyze_sample_probabilities(all_labels_synth, all_sample_probs_synth, num_classes)
             #for class_name, s in prob_stats.items():
             #    print(f"Class {class_name}: mean={s['mean']:.2e}, max={s['max']:.2e}, min={s['min']:.2e}, std={s['std']:.2e}")
 
-             
-           
+
+
             # os.makedirs(f"{opt.root_folder}/plots", exist_ok=True)
-            
+
             # N = 500
             # NUM_CLASSES = 10  # Change if not CIFAR-10
             # synthetic_embeddings_np = all_features_synth  # shape: (50000, D)
@@ -404,8 +410,8 @@ if __name__ == "__main__":
             # # Select 50 per class
             # synthetic_embeddings_par, synthetic_labels_par = select_n_per_class_numpy(
             #     synthetic_embeddings_np, synthetic_labels_np, num_per_class=N, num_classes=NUM_CLASSES
-            # )            
-            
+            # )
+
             # save_path = f"{opt.root_folder}/tsne/tsne_main/{opt.model}/{opt.dataset}/{opt.method}/synth_embeddings_{dataset_name_lower}_seed_{i}_m{n_model}_n{N}.npz"
             # os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
@@ -445,7 +451,7 @@ if __name__ == "__main__":
             # #Select 50 per class
             # real_embeddings_par, real_labels_par = select_n_per_class_numpy(
             #    real_embeddings_np, real_labels_np, num_per_class=N, num_classes=NUM_CLASSES
-            # )       
+            # )
 
 
             train_path = f"{DIR}/{embeddings_folder}/{dataset_name_upper}/{opt.model}_train_m{n_model}.npz"
@@ -462,10 +468,10 @@ if __name__ == "__main__":
             # #Select 50 per class
             # real_embeddings_par, real_labels_par = select_n_per_class_numpy(
             #    real_embeddings_np, real_labels_np, num_per_class=N, num_classes=NUM_CLASSES
-            # )       
+            # )
 
 
-            
+
             # save_path = f"{opt.root_folder}/tsne/tsne_main/{opt.model}/{opt.dataset}/{opt.method}/real_embeddings_{dataset_name_lower}_seed_{i}_m{n_model}_n{N}.npz"
             # os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
@@ -496,14 +502,14 @@ if __name__ == "__main__":
             # plt.tight_layout()
             # plt.savefig(f"{opt.root_folder}/tsne/tsne_main/{opt.model}/{opt.dataset}/{opt.method}/plots/tsne_real_embeddings_fc.png", dpi=300)
             # plt.close()
-                    
-            
+
+
             for class_to_remove in opt.class_to_remove:
                 print(f'------------class {class_to_remove}-----------')
                 batch_size = opt.batch_size
                 #forget_class = class_to_remove[0]
                 train_path = f"{DIR}/{embeddings_folder}/{dataset_name_upper}/{opt.model}_train_m{n_model}.npz"
-                
+
                 if dataset_name_lower == "TinyImageNet":
                     test_path = f"{DIR}/{embeddings_folder}/{dataset_name_upper}/{opt.model}_val_m{n_model}.npz"
                 else:
@@ -524,7 +530,7 @@ if __name__ == "__main__":
 
                 full_emb = full_embeddings_data["embeddings"]  # The embeddings for the training data
                 full_labels = full_embeddings_data["labels"]   # The labels for the training data
-                
+
                 train_emb = torch.tensor(train_emb, dtype=torch.float32)
                 train_labels = torch.tensor(train_labels, dtype=torch.long)
 
@@ -533,7 +539,7 @@ if __name__ == "__main__":
 
                 full_emb = torch.tensor(full_emb, dtype=torch.float32)
                 full_labels = torch.tensor(full_labels, dtype=torch.long)
-                
+
                 # Move the tensors to the device (GPU or CPU)
                 train_emb = train_emb.to(device)
                 train_labels = train_labels.to(device)
@@ -543,7 +549,7 @@ if __name__ == "__main__":
 
                 full_emb = full_emb.to(device)
                 full_labels = full_labels.to(device)
-                
+
                 # Create a DataLoader for training data
                 train_dataset = TensorDataset(train_emb, train_labels)
                 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -554,69 +560,88 @@ if __name__ == "__main__":
 
                 full_dataset = TensorDataset(full_emb, full_labels)
                 full_loader = DataLoader(full_dataset, batch_size=batch_size, shuffle=False)
-                
+
                 # -------------------- Separate Forget and Retain Sets --------------------
                 forget_tensor = torch.tensor(class_to_remove, device=train_labels.device)
-                
+
                 # Forget set
                 #forget_mask_train = (train_labels == forget_class)
-                forget_mask_train = torch.isin(train_labels, forget_tensor)
+                # Same seed-42 90/10 training split used by training_original.py.
+                split_generator = torch.Generator().manual_seed(42)
+                split_order = torch.randperm(len(train_labels), generator=split_generator)
+                train_cutoff = int(0.9 * len(split_order))
+                train_index_mask = torch.zeros(len(train_labels), dtype=torch.bool)
+                val_index_mask = torch.zeros(len(train_labels), dtype=torch.bool)
+                train_index_mask[split_order[:train_cutoff]] = True
+                val_index_mask[split_order[train_cutoff:]] = True
+                train_index_mask = train_index_mask.to(train_labels.device)
+                val_index_mask = val_index_mask.to(train_labels.device)
+
+                class_forget_mask_train = torch.isin(train_labels, forget_tensor)
+                forget_mask_train = train_index_mask & class_forget_mask_train
                 forget_features_train = train_emb[forget_mask_train]
                 forget_labels_train = train_labels[forget_mask_train]
 
 
                 # Retain set
                 #retain_mask_train = (train_labels != forget_class)
-                retain_mask_train = ~forget_mask_train
+                retain_mask_train = train_index_mask & ~class_forget_mask_train
                 retain_features_train = train_emb[retain_mask_train]
                 retain_labels_train = train_labels[retain_mask_train]
-                
+
+                val_forget_mask = val_index_mask & class_forget_mask_train
+                val_retain_mask = val_index_mask & ~class_forget_mask_train
+                val_forget_dataset = TensorDataset(train_emb[val_forget_mask], train_labels[val_forget_mask])
+                val_retain_dataset = TensorDataset(train_emb[val_retain_mask], train_labels[val_retain_mask])
+                val_fgt_loader_real = DataLoader(val_forget_dataset, batch_size=batch_size, shuffle=False)
+                val_retain_loader_real = DataLoader(val_retain_dataset, batch_size=batch_size, shuffle=False)
+
                 # Forget set
                 #forget_mask_test = (test_labels == forget_class)
                 forget_mask_test = torch.isin(test_labels, forget_tensor)
                 forget_features_test = test_emb[forget_mask_test]
                 forget_labels_test = test_labels[forget_mask_test]
-                
+
                 # Retain set
                 #retain_mask_test = (test_labels != forget_class)
                 retain_mask_test = ~forget_mask_test
                 retain_features_test = test_emb[retain_mask_test]
                 retain_labels_test = test_labels[retain_mask_test]
-                
+
                 # Forget set
                 #forget_mask_full = (full_labels == forget_class)
                 forget_mask_full = torch.isin(full_labels, forget_tensor)
                 forget_features_full = full_emb[forget_mask_full]
                 forget_labels_full = full_labels[forget_mask_full]
-                
+
                 # Retain set
                 #retain_mask_full = (full_labels != forget_class)
                 retain_mask_full = ~forget_mask_full
                 retain_features_full = full_emb[retain_mask_full]
                 retain_labels_full = full_labels[retain_mask_full]
-                
+
                 # -------------------- Create DataLoaders for Forget and Retain Sets --------------------
                 # Create TensorDatasets for each subset
                 train_forget_dataset = TensorDataset(forget_features_train, forget_labels_train)
                 train_retain_dataset = TensorDataset(retain_features_train, retain_labels_train)
-                
+
                 test_forget_dataset = TensorDataset(forget_features_test, forget_labels_test)
                 test_retain_dataset = TensorDataset(retain_features_test, retain_labels_test)
-                
+
                 full_forget_dataset = TensorDataset(forget_features_full, forget_labels_full)
                 full_retain_dataset = TensorDataset(retain_features_full, retain_labels_full)
-                
+
                 # Create DataLoader for each subset
                 train_fgt_loader_real = DataLoader(train_forget_dataset, batch_size=batch_size, shuffle=True)
                 train_retain_loader_real = DataLoader(train_retain_dataset, batch_size=batch_size, shuffle=True)
-                
+
                 test_fgt_loader_real = DataLoader(test_forget_dataset, batch_size=batch_size, shuffle=False)
                 test_retain_loader_real = DataLoader(test_retain_dataset, batch_size=batch_size, shuffle=False)
 
                 full_forget_loader = DataLoader(full_forget_dataset, batch_size=batch_size, shuffle=False)
                 full_retain_loader = DataLoader(full_retain_dataset, batch_size=batch_size, shuffle=False)
-                
-                
+
+
                 all_train_loader = train_loader
                 all_test_loader = test_loader
 
@@ -626,22 +651,24 @@ if __name__ == "__main__":
                     + f'weights/chks_{dataset_name_lower}/retrained/best_checkpoint_{opt.model}_without_{forget_tag}.pth'
                 )
                 print(opt.RT_model_weights_path)
-                
+
                 row_orig, row_unl, row_ret=main(all_features_synth=all_features_synth,
                                                 all_labels_synth=all_labels_synth,
                                                 train_retain_loader_real=train_retain_loader_real,
                                                 train_fgt_loader_real=train_fgt_loader_real,
                                                 test_retain_loader=test_retain_loader_real,
                                                 test_fgt_loader=test_fgt_loader_real,
+                                                val_retain_loader=val_retain_loader_real,
+                                                val_fgt_loader=val_fgt_loader_real,
                                                 train_loader=all_train_loader,
                                                 test_loader=all_test_loader,
                                                 seed=i,
                                                 class_to_remove=class_to_remove)
 
                 #print results
-                
 
-                
+
+
                 if row_orig is not None:
                     print(f"Original retain test acc: {row_orig['retain_test_accuracy']}")
                     df_orig_total.append(row_orig)
@@ -651,10 +678,10 @@ if __name__ == "__main__":
                 if row_ret is not None:
                     print(f"Retrained retain test acc: {row_ret['retain_test_accuracy']}")
                     df_retrained_total.append(row_ret)
-        
+
     print(opt.dataset)
     #create results folder if doesn't exist
-    
+
     dfs = {"orig":[], "unlearned":[], "retrained":[]}
     for name, df in zip(dfs.keys(),[df_orig_total, df_unlearned_total, df_retrained_total]):
         if df:
@@ -675,4 +702,4 @@ if __name__ == "__main__":
             #aus = AUS(a_t, a_or, a_f)
             #dfs[name]["AUS"] = aus.value
             #print(f"AUS: {aus.value:.4f} \pm {aus.error:.4f}")
-   
+

@@ -374,6 +374,8 @@ class BaseMethod:
             total_count=total_count,
             unlearning_time_until_best=round(unlearning_time_until_best,4))
 
+        if best_model_state is not None:
+            merged_model.load_state_dict(best_model_state)
         merged_model.eval()
         return merged_model
     
@@ -762,6 +764,8 @@ class NGFT_weighted(BaseMethod):
 
 
 
+        if best_model_state is not None:
+            merged_model.load_state_dict(best_model_state)
         merged_model.eval()
         return merged_model
 
