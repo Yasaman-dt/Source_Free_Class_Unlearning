@@ -661,6 +661,8 @@ class NGFT(BaseMethod):
             retain_count=retain_count,
             forget_count=forget_count,
             total_count=total_count)
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.net.eval()
         return self.net
 
@@ -1130,7 +1132,6 @@ class SCAR(BaseMethod):
                 best_aus = max(best_aus, AUS)
                 best_retain_acc = max(best_retain_acc, retaintest_val_acc)
                 best_forget_acc = min(best_forget_acc, forgettest_val_acc)
-                
                 best_model_state = deepcopy(self.net.state_dict())
 
 
@@ -1228,6 +1229,8 @@ class SCAR(BaseMethod):
             forget_count=forget_count,
             total_count=total_count)
 
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.net.eval()
         return self.net
     
@@ -1435,6 +1438,8 @@ class BoundaryShrink(BaseMethod):
             total_count=total_count)
 
 
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.model = self.net
         
         return self.model
@@ -1493,6 +1498,7 @@ class BoundaryExpanding(BaseMethod):
         best_aus = float('-inf')  # Maximum AUS
         best_retain_acc = float('-inf')  # Maximum retaintest_val_acc
         best_forget_acc = float('inf')  # Minimum forgettest_val_acc
+        best_widen_state = None
 
         Aor = calculate_accuracy(self.net, self.test_retain_loader, use_fc_only=True)
         retain_count = count_samples(self.train_retain_loader)
@@ -1555,6 +1561,7 @@ class BoundaryExpanding(BaseMethod):
                 best_aus = max(best_aus, AUS)
                 best_retain_acc = max(best_retain_acc, retaintest_val_acc)
                 best_forget_acc = min(best_forget_acc, forgettest_val_acc)
+                best_widen_state = deepcopy(widen_model.state_dict())
                 
                 with torch.no_grad():
                     head = get_classifier(self.net)
@@ -1673,7 +1680,9 @@ class BoundaryExpanding(BaseMethod):
             forget_count=forget_count,
             total_count=total_count)
                         
-        # Prune the shadow class to return a normal classifier
+        # Return the best validation-selected widened head, then remove its shadow class.
+        if best_widen_state is not None:
+            widen_model.load_state_dict(best_widen_state)
         with torch.no_grad():
             self.net.fc.weight.copy_(widen_model.weight[:num_classes])
             self.net.fc.bias.copy_(widen_model.bias[:num_classes])
@@ -1992,7 +2001,8 @@ class SCRUB(BaseMethod):
             forget_count=forget_count,
             total_count=total_count)
         set_classifier(self.student, student_fc)
-
+        if best_model_state is not None:
+            self.student.load_state_dict(best_model_state)
         return self.student
 
 
@@ -2242,6 +2252,8 @@ class DUCK(BaseMethod):
             forget_count=forget_count,
             total_count=total_count)        
 
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.net.eval()
         return self.net
     
@@ -2490,7 +2502,8 @@ class RetrainedEmbedding(BaseMethod):
         print(f"Best Epoch {best_epoch+1}: Train Acc {best_train_acc:.2f}%, Val Acc {best_acc:.2f}%")
 
         self.net.fc = self.fc_layer
-        
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         return self.net
     
 

@@ -734,6 +734,8 @@ class NGFT(BaseMethod):
             unlearning_time_until_best=round(unlearning_time_until_best,4))
 
 
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.net.eval()
         return self.net
     
@@ -1378,6 +1380,8 @@ class SCAR(BaseMethod):
             total_count=total_count,
             unlearning_time_until_best=round(unlearning_time_until_best,4))
 
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.net.eval()
         return self.net
 
@@ -1586,6 +1590,8 @@ class BoundaryShrink(BaseMethod):
             unlearning_time_until_best=round(unlearning_time_until_best,4))
 
 
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.model = self.net
         
         return self.model
@@ -1722,6 +1728,7 @@ class BoundaryExpanding(BaseMethod):
                 best_aus = max(best_aus, AUS)
                 best_retain_acc = max(best_retain_acc, retaintest_val_acc)
                 best_forget_acc = min(best_forget_acc, forgettest_val_acc)
+                best_widen_state = deepcopy(widen_model.state_dict())
 
                 with torch.no_grad():
                     head = get_classifier(self.net)
@@ -2183,7 +2190,8 @@ class SCRUB(BaseMethod):
 
         
         set_classifier(self.student, student_fc)
-
+        if best_model_state is not None:
+            self.student.load_state_dict(best_model_state)
         return self.student
 
 
@@ -2439,6 +2447,8 @@ class DUCK(BaseMethod):
             unlearning_time_until_best=round(unlearning_time_until_best,4))
         
 
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.net.eval()
         return self.net
 
@@ -2684,6 +2694,8 @@ class RetrainedEmbedding(BaseMethod):
         print(f"Best Epoch {best_epoch+1}: Train Acc {best_train_acc:.2f}%, Val Acc {best_acc:.2f}%")
 
         set_classifier(self.net, self.fc_layer)
+        if best_model_state is not None:
+            self.net.load_state_dict(best_model_state)
         self.net.eval()
 
         return self.net
